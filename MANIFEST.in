@@ -1,0 +1,2 @@
+include versioneer.py
+include uchicagoABCDProcessing/_version.py
