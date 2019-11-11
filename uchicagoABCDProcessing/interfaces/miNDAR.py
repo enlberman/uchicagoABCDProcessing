@@ -7,63 +7,34 @@ import pandas
 import numpy
 import nibabel
 import nilearn
+import cx_Oracle
 import os
 from nipype.utils.filemanip import fname_presuffix
 
 LOGGER = logging.getLogger('nipype.interface')
 
 
-class DFAInputSpec(TraitedSpec):
-    bold = traits.File(mandatory=True, desc='input bold')
-    brainmask = traits.String( mandatory=False, desc='brainmask in bold space')
-    csv = traits.String(mandatory=False, desc='input csv')
-    max_frequency = traits.Float(.1, usedefault=True,
-                             desc='Maximum frequency')
-    min_frequency = traits.Float(.01, usedefault=True,
-                             desc='Minimum frequency')
-    # output_format = traits.String('', usedefault=True,
-    #                              desc='output format: default is the same as input format')
-
-    drop_vols = traits.Int(5, usedefault=True,
-                                  desc='how many volumes to drop')
+class miNDARQueryInputSpec(TraitedSpec):
+    subject_id = traits.String( mandatory=False, desc='subject identifier')
+    username = traits.String(mandatory=True, desc='username for miNDAR')
+    password = traits.String(mandatory=True, desc='passowrd for MINDAR')
+    host = traits.String(mandatory=True, desc='host for miNDAR')
 
 
-class DFAOutputSpec(TraitedSpec):
+class miNDARQueryOutputSpec(TraitedSpec):
     out_report = File(exists=True, desc='conformation report')
-    hurst = File(exists=True, desc='hurst file')
-    confidence_intervals = File(exists=True, desc='confidence interval file')
-    rsquared = File(exists=True, desc='r squared file')
+    out = traits.List(value=[])
 
 
-def _bold_native_masked_derivative(bold_img, mask_img, derivative_data, out_file):
-    from nilearn.image import index_img
-    bold_template = index_img(bold_img, 0)
-    template_data = bold_template.get_data()
-    mask = mask_img.get_data() == 1
-    template_data[~mask] = 0
-    template_data[mask] = derivative_data
-    bold_template.__class__(template_data, bold_template.affine, bold_template.header).to_filename(out_file)
-
-
-class DFA(SimpleInterface):
+class miNDARQueryDFA(SimpleInterface):
     """
-    Finds template target dimensions for a series of T1w images, filtering low-resolution images,
-    if necessary.
 
-    Along each axis, the minimum voxel size (zoom) and the maximum number of voxels (shape) are
-    found across images.
-
-    The ``max_scale`` parameter sets a bound on the degree of up-sampling performed.
-    By default, an image with a voxel size greater than 3x the smallest voxel size
-    (calculated separately for each dimension) will be discarded.
-
-    To select images that require no scaling (i.e. all have smallest voxel sizes),
-    set ``max_scale=1``.
     """
-    input_spec = DFAInputSpec
-    output_spec = DFAOutputSpec
+    input_spec = miNDARQueryInputSpec
+    output_spec = miNDARQueryOutputSpec
 
     def _run_interface(self, runtime):
+        connection = cx_Oracle
         img = nibabel.load(str(self.inputs.bold))
         tr = img.header.get('pixdim')[4]
 
