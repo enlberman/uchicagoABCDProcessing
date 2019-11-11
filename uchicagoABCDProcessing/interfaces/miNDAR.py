@@ -29,7 +29,7 @@ class miNDARQueryDFA(SimpleInterface):
     def _run_interface(self, runtime):
         out=None
         try:
-            connection: cx_Oracle.Connection = cx_Oracle.connect('%s/%s@%s' % (self.inputs.username, self.inputs.password, self.inputs.host))
+            connection: cx_Oracle.Connection = cx_Oracle.connect('%s/%s@%s/ORCL' % (self.inputs.username, self.inputs.password, self.inputs.host))
             cursor: cx_Oracle.Cursor = connection.cursor()
             query = ''
             cursor.execute(query)
