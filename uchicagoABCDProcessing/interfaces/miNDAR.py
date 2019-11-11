@@ -2,14 +2,7 @@ from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec, SimpleInterface,
     File, InputMultiPath, OutputMultiPath)
 from nipype import logging
-from python_fractal_scaling.dfa import dfa
-import pandas
-import numpy
-import nibabel
-import nilearn
 import cx_Oracle
-import os
-from nipype.utils.filemanip import fname_presuffix
 
 LOGGER = logging.getLogger('nipype.interface')
 
