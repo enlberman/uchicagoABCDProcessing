@@ -43,13 +43,14 @@ class s3Download(SimpleInterface):
             link_list = link.split('/')
             bucket = link_list[2]
             file = link.split(bucket+'/')[1]
-            files.append(os.path.join(self.inputs.dest,file))
             """ e.g.
             self.inputs.link = 's3://NDAR_Central_2/submission_19173/NDARINVBL4HN6F4_baselineYear1Arm1_ABCD-MPROC-DTI_20180525132204.tgz'
             link = ['s3:', '', 'NDAR_Central_2', 'submission_19173', 'NDARINVBL4HN6F4_baselineYear1Arm1_ABCD-MPROC-DTI_20180525132204.tgz']
             bucket = 'NDAR_Central_2'
             file = 'submission_19173/NDARINVBL4HN6F4_baselineYear1Arm1_ABCD-MPROC-DTI_20180525132204.tgz'
             """
+
+            files.append(os.path.join(self.inputs.dest, file))  # add the expected download file path to our list
 
             s3.download_file(bucket, file, self.inputs.dest)
 
