@@ -8,7 +8,7 @@ fractal scaling calculation workflow
 
 import logging
 import sys
-
+from multiprocessing import set_start_method
 
 logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNING
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
@@ -20,7 +20,8 @@ def main():
     from .run_utils import get_workflow
     import sentry_sdk
     from ..utils.bids import write_derivative_description
-
+    if __name__ == 'main':
+        set_start_method('forkserver')
     errno = 1  # Default is error exit unless otherwise set
     workflow, plugin_settings, opts, output_dir, work_dir, bids_dir, subject_list, run_uuid = get_workflow(logger)
 

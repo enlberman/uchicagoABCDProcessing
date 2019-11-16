@@ -156,7 +156,8 @@ def get_workflow(logger):
     from multiprocessing import set_start_method, Process, Manager
     from ..utils.bids import validate_input_dir
     from .build_workflow import build_workflow
-    set_start_method('forkserver')
+    if __name__ == 'main':
+        set_start_method('forkserver')
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
 
