@@ -4,7 +4,7 @@ from nipype import Workflow
 import sys
 import os
 from copy import deepcopy
-from niworkflows.utils.misc import fix_multi_T1w_source_name
+from fmriprep.workflows.base import init_fmriprep_wf
 
 from nipype import __version__ as nipype_ver
 from nipype.pipeline import engine as pe
@@ -24,12 +24,78 @@ from ..interfaces import SubjectSummary, AboutSummary, DerivativesDataSink
 from ..__about__ import __version__
 
 
-def init_base_wf(opts: ArgumentParser,
-                 layout: BIDSLayout,
-                 run_uuid: str,
-                 subject_list: list,
-                 work_dir: str,
-                 output_dir: str):
+def init_base_wf(
+        anat_only,
+        aroma_melodic_dim,
+        bold2t1w_dof,
+        cifti_output,
+        debug,
+        dummy_scans,
+        echo_idx,
+        err_on_aroma_warn,
+        fmap_bspline,
+        fmap_demean,
+        force_syn,
+        freesurfer,
+        hires,
+        ignore,
+        layout,
+        longitudinal,
+        low_mem,
+        medial_surface_nan,
+        omp_nthreads,
+        output_dir,
+        output_spaces,
+        run_uuid,
+        regressors_all_comps,
+        regressors_fd_th,
+        regressors_dvars_th,
+        skull_strip_fixed_se,
+        skull_strip_template,
+        subject_list,
+        t2s_coreg,
+        task_id,
+        use_aroma,
+        use_bbr,
+        use_syn,
+        work_dir,
+        opts: ArgumentParser):
+    fmriprep_workflow = init_fmriprep_wf(
+        anat_only=anat_only,
+        aroma_melodic_dim=aroma_melodic_dim,
+        bold2t1w_dof=bold2t1w_dof,
+        cifti_output=cifti_output,
+        debug=debug,
+        dummy_scans=dummy_scans,
+        echo_idx=echo_idx,
+        err_on_aroma_warn=err_on_aroma_warn,
+        fmap_bspline=fmap_bspline,
+        fmap_demean=fmap_demean,
+        force_syn=force_syn,
+        freesurfer=freesurfer,
+        hires=hires,
+        ignore=ignore,
+        layout=layout,
+        longitudinal=longitudinal,
+        low_mem=low_mem,
+        medial_surface_nan=medial_surface_nan,
+        omp_nthreads=omp_nthreads,
+        output_dir=str(output_dir),
+        output_spaces=output_spaces,
+        run_uuid=run_uuid,
+        regressors_all_comps=regressors_all_comps,
+        regressors_fd_th=regressors_fd_th,
+        regressors_dvars_th=regressors_dvars_th,
+        skull_strip_fixed_seed=skull_strip_fixed_se,
+        skull_strip_template=skull_strip_template,
+        subject_list=subject_list,
+        t2s_coreg=t2s_coreg,
+        task_id=task_id,
+        use_aroma=use_aroma,
+        use_bbr=use_bbr,
+        use_syn=use_syn,
+        work_dir=str(work_dir),
+    )
     workflow = Workflow(name='uchicagoABCDProcessing_wf')
     workflow.base_dir = opts.work_dir
 
@@ -41,7 +107,7 @@ def init_base_wf(opts: ArgumentParser,
             run_uuid=run_uuid,
             work_dir=str(work_dir),
             output_dir=str(output_dir),
-            name="single_subject_" + subject_id +"_wf",
+            name="single_subject_" + subject_id + "_wf",
             subject_id=subject_id,
             reportlets_dir=reportlets_dir,
         )
@@ -58,14 +124,14 @@ def init_base_wf(opts: ArgumentParser,
 
 
 def init_single_subject_wf(
-            opts: ArgumentParser,
-            layout: BIDSLayout,
-            run_uuid: str,
-            work_dir:str,
-            output_dir:str,
-            name:str,
-            subject_id:str,
-            reportlets_dir:str,
+        opts: ArgumentParser,
+        layout: BIDSLayout,
+        run_uuid: str,
+        work_dir: str,
+        output_dir: str,
+        name: str,
+        subject_id: str,
+        reportlets_dir: str,
 ):
     import nilearn
     if name in ('single_subject_wf', 'single_subject_test_wf'):
@@ -114,7 +180,7 @@ def init_single_subject_wf(
         bids_dir=layout.root, bids_validate=False), name='bids_info')
 
     summary = pe.Node(SubjectSummary(),
-        name='summary', run_without_submitting=True)
+                      name='summary', run_without_submitting=True)
 
     about = pe.Node(AboutSummary(version=__version__,
                                  command=' '.join(sys.argv)),
@@ -153,7 +219,7 @@ def init_single_subject_wf(
     for i in range(len(subject_data['bold'])):
         dfa_wf = init_dfa_workflow(
             bold=subject_data['bold'][i],
-            brainmask=subject_data['mask'][i] if subject_data.keys().__contains__('mask')else None,
+            brainmask=subject_data['mask'][i] if subject_data.keys().__contains__('mask') else None,
             csv=subject_data['csv'][i] if subject_data.keys().__contains__('csv') else None,
             min_freq=opts.minimum_frequency,
             max_freq=opts.maximum_frequency,
@@ -165,7 +231,7 @@ def init_single_subject_wf(
 
         outputs_wf = init_datasink_wf(bids_root=str(layout.root), output_dir=str(opts.output_dir))
 
-        workflow.connect([(dfa_wf,outputs_wf,[('inputnode.bold','inputnode.source_file')])])
+        workflow.connect([(dfa_wf, outputs_wf, [('inputnode.bold', 'inputnode.source_file')])])
         # outputs_wf.inputs.source_file = subject_data['csv'][i] if subject_data.__contains__('mask') else subject_data['bold'][i]
 
         workflow.connect([(dfa_wf, outputs_wf, [

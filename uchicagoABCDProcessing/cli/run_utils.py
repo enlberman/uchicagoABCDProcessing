@@ -7,7 +7,7 @@ import warnings
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 
-from uchicagoABCDProcessing.cli.version import check_latest
+from uchicagoABCDProcessing.cli.version import check_latest, is_flagged
 
 
 def _warn_redirect(message, category, filename, lineno, logger, file=None, line=None):
@@ -30,7 +30,7 @@ def get_parser() -> ArgumentParser():
     from packaging.version import Version
     from ..__about__ import __version__
     from fmriprep.workflows.bold.resampling import  NONSTANDARD_REFERENCES
-    from fmriprep.cli.version import check_latest, is_flagged
+    # from fmriprep.cli.version import check_latest, is_flagged
 
     verstr = 'fmriprep v{}'.format(__version__)
     currentv = Version(__version__)
