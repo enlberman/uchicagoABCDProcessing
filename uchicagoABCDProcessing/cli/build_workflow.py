@@ -179,6 +179,7 @@ def build_workflow(opts, retval):
         use_bbr=opts.use_bbr,
         use_syn=opts.use_syn_sdc,
         work_dir=str(work_dir),
+        opts=opts
     )
     retval['return_code'] = 0
 
