@@ -46,62 +46,62 @@ def main():
         if not opts.notrack:
             sentry_sdk.capture_message('uchicagoABCDProcessing finished without errors',
                                        level='info')
-    finally:
-        from niworkflows.reports import generate_reports
-        from subprocess import check_call, CalledProcessError, TimeoutExpired
-        from pkg_resources import resource_filename as pkgrf
-        from shutil import copyfile
-
-        citation_files = {
-            ext: output_dir / 'uchicagoABCDProcessing' / 'logs' / ('CITATION.%s' % ext)
-            for ext in ('bib', 'tex', 'md', 'html')
-        }
-
-        if citation_files['md'].exists():
-            # Generate HTML file resolving citations
-            cmd = ['pandoc', '-s', '--bibliography',
-                   pkgrf('uchicagoABCDProcessing', 'data/boilerplate.bib'),
-                   '--filter', 'pandoc-citeproc',
-                   '--metadata', 'pagetitle="uchicagoABCDProcessing citation boilerplate"',
-                   str(citation_files['md']),
-                   '-o', str(citation_files['html'])]
-
-            logger.info('Generating an HTML version of the citation boilerplate...')
-            try:
-                check_call(cmd, timeout=10)
-            except (FileNotFoundError, CalledProcessError, TimeoutExpired):
-                logger.warning('Could not generate CITATION.html file:\n%s',
-                               ' '.join(cmd))
-
-            # Generate LaTex file resolving citations
-            cmd = ['pandoc', '-s', '--bibliography',
-                   pkgrf('uchicagoABCDProcessing', 'data/boilerplate.bib'),
-                   '--natbib', str(citation_files['md']),
-                   '-o', str(citation_files['tex'])]
-            logger.info('Generating a LaTeX version of the citation boilerplate...')
-            try:
-                check_call(cmd, timeout=10)
-            except (FileNotFoundError, CalledProcessError, TimeoutExpired):
-                logger.warning('Could not generate CITATION.tex file:\n%s',
-                               ' '.join(cmd))
-            else:
-                copyfile(pkgrf('uchicagoABCDProcessing', 'data/boilerplate.bib'),
-                         citation_files['bib'])
-        else:
-            logger.warning('uchicagoABCDProcessing could not find the markdown version of '
-                           'the citation boilerplate (%s). HTML and LaTeX versions'
-                           ' of it will not be available', citation_files['md'])
-
-        # Generate reports phase
-        failed_reports = generate_reports(
-            subject_list, output_dir, work_dir, run_uuid, packagename='uchicagoABCDProcessing')
-        write_derivative_description(bids_dir, output_dir / 'uchicagoABCDProcessing')
-
-        if failed_reports and not opts.notrack:
-            sentry_sdk.capture_message(
-                'Report generation failed for %d subjects' % failed_reports,
-                level='error')
-        sys.exit(int((errno + failed_reports) > 0))
+    # finally:
+    #     from niworkflows.reports import generate_reports
+    #     from subprocess import check_call, CalledProcessError, TimeoutExpired
+    #     from pkg_resources import resource_filename as pkgrf
+    #     from shutil import copyfile
+    #
+    #     citation_files = {
+    #         ext: output_dir / 'uchicagoABCDProcessing' / 'logs' / ('CITATION.%s' % ext)
+    #         for ext in ('bib', 'tex', 'md', 'html')
+    #     }
+    #
+    #     if citation_files['md'].exists():
+    #         # Generate HTML file resolving citations
+    #         cmd = ['pandoc', '-s', '--bibliography',
+    #                pkgrf('uchicagoABCDProcessing', 'data/boilerplate.bib'),
+    #                '--filter', 'pandoc-citeproc',
+    #                '--metadata', 'pagetitle="uchicagoABCDProcessing citation boilerplate"',
+    #                str(citation_files['md']),
+    #                '-o', str(citation_files['html'])]
+    #
+    #         logger.info('Generating an HTML version of the citation boilerplate...')
+    #         try:
+    #             check_call(cmd, timeout=10)
+    #         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+    #             logger.warning('Could not generate CITATION.html file:\n%s',
+    #                            ' '.join(cmd))
+    #
+    #         # Generate LaTex file resolving citations
+    #         cmd = ['pandoc', '-s', '--bibliography',
+    #                pkgrf('uchicagoABCDProcessing', 'data/boilerplate.bib'),
+    #                '--natbib', str(citation_files['md']),
+    #                '-o', str(citation_files['tex'])]
+    #         logger.info('Generating a LaTeX version of the citation boilerplate...')
+    #         try:
+    #             check_call(cmd, timeout=10)
+    #         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+    #             logger.warning('Could not generate CITATION.tex file:\n%s',
+    #                            ' '.join(cmd))
+    #         else:
+    #             copyfile(pkgrf('uchicagoABCDProcessing', 'data/boilerplate.bib'),
+    #                      citation_files['bib'])
+    #     else:
+    #         logger.warning('uchicagoABCDProcessing could not find the markdown version of '
+    #                        'the citation boilerplate (%s). HTML and LaTeX versions'
+    #                        ' of it will not be available', citation_files['md'])
+    #
+    #     # Generate reports phase
+    #     failed_reports = generate_reports(
+    #         subject_list, output_dir, work_dir, run_uuid, packagename='uchicagoABCDProcessing')
+    #     write_derivative_description(bids_dir, output_dir / 'uchicagoABCDProcessing')
+    #
+    #     if failed_reports and not opts.notrack:
+    #         sentry_sdk.capture_message(
+    #             'Report generation failed for %d subjects' % failed_reports,
+    #             level='error')
+    #     sys.exit(int((errno + failed_reports) > 0))
 
 
 if __name__ == '__main__':
