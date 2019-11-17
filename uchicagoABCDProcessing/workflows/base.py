@@ -96,6 +96,44 @@ def init_base_wf(
         use_syn=use_syn,
         work_dir=str(work_dir),
     )
+    # todo change this workflow and take out head motion correction from bold
+    # todo pass the file locations from fmriprep (bold in mni,regressors, brainmask)
+    from fmriprep.workflows.base import init_fmriprep_wf
+
+    # func workflows have the name like 'func_preproc_*_wf'
+    #* :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+    #init_bold_hmc_wf(name='bold_hmc_wf',
+
+    # list of func preproc workflows
+
+
+    # for each workflow in the list find the subworkflow named bold_hmc_wf and then disconnect it and do the passthrough connections that we need
+    """
+      (bold_reference_wf, bold_hmc_wf, [
+            ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
+            ('outputnode.bold_file', 'inputnode.bold_file')]),
+    (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
+    (bold_hmc_wf, bold_confounds_wf, [
+            ('outputnode.movpar_file', 'inputnode.movpar_file')]),
+    (bold_hmc_wf, bold_bold_trans_wf, [
+            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+    """
+    ##maybe we dont nee the bold bold trans wf???
+
+    # connect outputs to new pieces of confound regression hurst,matrices, and parcellation
+    """
+    (bold_std_trans_wf, func_derivatives_wf, [
+                ('poutputnode.templates', 'inputnode.template'),
+                ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
+                ('poutputnode.bold_std', 'inputnode.bold_std'),
+                ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),
+            ]),
+    bold_std_trans_wf = init_bold_std_trans_wf(
+            name='bold_std_trans_wf',
+    """
+
+
+
     workflow = Workflow(name='uchicagoABCDProcessing_wf')
     workflow.base_dir = opts.work_dir
 
