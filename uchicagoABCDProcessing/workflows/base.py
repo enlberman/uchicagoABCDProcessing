@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 import numpy
 from bids import BIDSLayout
+from fMRIConfoundRegression.interfaces import ThirtySixParameter
 from nipype import Workflow
 import sys
 import os
@@ -10,7 +11,7 @@ from copy import deepcopy
 from nipype import __version__ as nipype_ver
 from fmriprep.workflows.base import init_fmriprep_wf
 from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu
+from nipype.interfaces import utility as niu, afni
 from nipype.utils.functions import getsource
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
@@ -180,23 +181,46 @@ def init_base_wf(
             (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')]),
             (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
         ])
+        # todo add the connection for existing motion correction to the bold confounds workflow
+        """
+        (bold_hmc_wf, bold_confounds_wf, [
+                ('outputnode.movpar_file', 'inputnode.movpar_file')]),                      ***************** need to generate this
+                ********************************************************************************************************
+                movpar_file
+                MCFLIRT motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
+                **********************************************************************************************************
+        """
 
-        print()
-    # connect outputs to new pieces of confound regression hurst,matrices, and parcellation
-    """
-    (bold_std_trans_wf, func_derivatives_wf, [
-                ('poutputnode.templates', 'inputnode.template'),
-                ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
-                ('poutputnode.bold_std', 'inputnode.bold_std'),
-                ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),
-            ]),
-    bold_std_trans_wf = init_bold_std_trans_wf(
-            name='bold_std_trans_wf',
-    """
+        """
+        (bold_std_trans_wf, func_derivatives_wf, [
+                    ('poutputnode.templates', 'inputnode.template'),
+                    ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
+                    ('poutputnode.bold_std', 'inputnode.bold_std'),
+                    ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),
+                ]),
+        bold_std_trans_wf = init_bold_std_trans_wf(
+                name='bold_std_trans_wf',
+        """
+        confoundRegressionNode = pe.Node(ThirtySixParameter(), name='36p')
+
+        wf.connect([
+            (bold_std_trans_wf, confoundRegressionNode, [('outputnode.bold_std', 'bold')]),
+            (bold_std_trans_wf, confoundRegressionNode, [('outputnode.bold_mask_std', 'brainmask')]),
+            (bold_confounds_wf, confoundRegressionNode, [('outputnode.confounds_file', 'regressors')]),
+        ])
+
+        despikeNode = pe.Node(afni.Despike(), name='despike')
+        despikeNode.inputs.outputtype = 'NIFTI_GZ'
+        despikeNode.inputs.args = '-NEW25'
+
+        wf.connect([
+            (confoundRegressionNode, despikeNode, [('regressed', 'in_file')]),
+            ])
 
 
 
-    workflow = Workflow(name='uchicagoABCDProcessing_wf')
+
+workflow = Workflow(name='uchicagoABCDProcessing_wf')
     workflow.base_dir = opts.work_dir
 
     reportlets_dir = os.path.join(opts.work_dir, 'reportlets')
