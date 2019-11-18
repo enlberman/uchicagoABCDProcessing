@@ -115,7 +115,6 @@ def init_base_wf(
     for unique_workflow in unique_ses_task_func_workflows:
         print(unique_workflow)
         wf = fmriprep_workflow.get_node(workflow_base_name + '.' + unique_workflow)
-        bold_reference_wf = fmriprep_workflow.get_node(workflow_base_name + '.' + unique_workflow + '.' + 'bold_reference_wf')
         bold_hmc_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_hmc_wf')
         bold_confounds_wf = fmriprep_workflow.get_node(
@@ -165,36 +164,6 @@ def init_base_wf(
             (
             merge_xforms_new_std, bold_std_trans_wf_bold_to_std_transform_node, [('out', 'transforms')]),
         ])
-        # for each workflow in the list find the subworkflow named bold_hmc_wf and then disconnect it and do the passthrough connections that we need
-        """
-        ****INPUTS****
-        (bold_reference_wf, bold_hmc_wf, [
-                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),                    ***************** disconnect
-                ('outputnode.bold_file', 'inputnode.bold_file')]),                          ***************** disconnect
-        ****OUTPUTS****
-        (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),   ***************** disconnect
-        (bold_hmc_wf, bold_confounds_wf, [
-                ('outputnode.movpar_file', 'inputnode.movpar_file')]),                      ***************** need to generate this
-                ********************************************************************************************************
-                movpar_file
-                MCFLIRT motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
-                **********************************************************************************************************
-        (bold_hmc_wf, bold_bold_trans_wf, [
-                ('outputnode.xforms', 'inputnode.hmc_xforms')]),                            ***************** disconnect
-        ***********************************************************************
-        in the bold_t1_trans_wf we need to replace the inclusion of hmc xforms init_bold_t1_trans_wf(name='bold_t1_trans_wf',
-        merge_xforms = pe.Node(niu.Merge(1), name='merge_xforms',
-                                   run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ****HOW TO CONNECT**********
-        workflow.connect([
-                # merge transforms
-                (inputnode, merge_xforms, [
-                    ('hmc_xforms', 'in%d' % nforms),
-                    ('itk_bold_to_t1', 'in1')]),
-                (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-        ************************************************************************
-        
-        """
         bold_sdc_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'sdc_bypass_wf')
         carpetplot_wf = fmriprep_workflow.get_node(
@@ -211,42 +180,6 @@ def init_base_wf(
             (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')]),
             (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
         ])
-        ##we dont nee the bold bold trans wf
-        """
-        bold_bold_trans_wf = init_bold_preproc_trans_wf(
-            mem_gb=mem_gb['resampled'],
-            omp_nthreads=omp_nthreads,
-            use_compression=not low_mem,
-            use_fieldwarp=(fmaps is not None or use_syn),
-            name='bold_bold_trans_wf'
-        )
-                    **Outputs**            
-                        bold
-                            BOLD series, resampled in native space, including all preprocessing
-                        bold_mask
-                            BOLD series mask calculated with the new time-series
-                        bold_ref
-                            BOLD reference image: an average-like 3D image of the time-series
-                        bold_ref_brain
-                            Same as ``bold_ref``, but once the brain mask has been applied
-        *****INPUTS****
-        (bold_sdc_wf, bold_bold_trans_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp'),             ***************** disconnect
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),          ***************** disconnect
-        (bold_split, bold_bold_trans_wf, [
-                ('out_files', 'inputnode.bold_file')]),                     ***************** disconnect
-        (bold_hmc_wf, bold_bold_trans_wf, [
-                ('outputnode.xforms', 'inputnode.hmc_xforms')]),            ***************** disconnect
-        ****OUTPUTS****       
-        (bold_bold_trans_wf, bold_confounds_wf, [
-                    ('outputnode.bold', 'inputnode.bold'),                  ****************** replace with (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')])
-                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),      ****************** replace with (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
-        (bold_bold_trans_wf if not multiecho else bold_t2s_wf, bold_std_trans_wf, [     
-                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),      ****************** replace with (bold_sdc_wf, bold_std_trans_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
-        (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
-                        ('outputnode.bold', 'inputnode.bold'),              ****************** replace with (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')])
-                        ('outputnode.bold_mask', 'inputnode.bold_mask')]),  ****************** replace with (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
-        """
 
         print()
     # connect outputs to new pieces of confound regression hurst,matrices, and parcellation
