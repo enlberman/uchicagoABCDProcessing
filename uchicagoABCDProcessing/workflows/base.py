@@ -117,13 +117,13 @@ def init_base_wf(
         bold_reference_wf = fmriprep_workflow.get_node(workflow_base_name + '.' + unique_workflow + '.' + 'bold_reference_wf')
         bold_hmc_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_hmc_wf')
-        bold_t1_trans_wf = fmriprep_workflow.get_node(
-            workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf')
         bold_confounds_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_confounds_wf')
-
         bold_bold_trans_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_bold_trans_wf')
+
+        bold_t1_trans_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf')
         bold_t1_trans_wf_merge_xforms_node = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf' + '.' + 'merge_xforms')
         bold_t1_trans_wf_bold_to_t1w_transform_node = fmriprep_workflow.get_node(
@@ -135,10 +135,12 @@ def init_base_wf(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf')
         bold_std_trans_wf_merge_xforms_node = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'merge_xforms')
-        bold_std_trans_wf_bold_to_t1w_transform_node = fmriprep_workflow.get_node(
-            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'bold_to_t1w_transform')
+        bold_std_trans_wf_bold_to_std_transform_node = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'bold_to_std_transform')
         bold_std_trans_wf_inputnode = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'inputnode')
+        bold_std_trans_wf_select_std = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'select_std')
 
         wf.disconnect([
             (bold_reference_wf, bold_hmc_wf, [
@@ -159,9 +161,11 @@ def init_base_wf(
 
         bold_std_trans_wf.disconnect([
             (bold_std_trans_wf_inputnode, bold_std_trans_wf_merge_xforms_node, [
-                ('hmc_xforms', 'in2'),
-                ('itk_bold_to_t1', 'in1')]),
-            (bold_std_trans_wf_merge_xforms_node, bold_std_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
+                ('hmc_xforms', 'in3'),
+                (('itk_bold_to_t1', _aslist), 'in2'),
+                ]),
+            (bold_std_trans_wf_select_std, bold_std_trans_wf_merge_xforms_node, [('anat2std_xfm', 'in1')]),
+            (bold_std_trans_wf_merge_xforms_node, bold_std_trans_wf_bold_to_std_transform_node, [('out', 'transforms')]),
         ])
 
         merge_xforms_new = pe.Node(niu.Merge(1), name='merge_xforms_new',
@@ -171,11 +175,15 @@ def init_base_wf(
             (merge_xforms_new, bold_t1_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
         ])
 
-        merge_xforms_new_std = pe.Node(niu.Merge(1), name='merge_xforms_new',
+        merge_xforms_new_std = pe.Node(niu.Merge(2), name='merge_xforms_new',
                                    run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         bold_std_trans_wf.connect([
-            (bold_std_trans_wf_inputnode, merge_xforms_new_std, [('itk_bold_to_t1', 'in1')]),
-            (merge_xforms_new_std, bold_std_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
+            (bold_std_trans_wf_inputnode, merge_xforms_new_std, [
+                (('itk_bold_to_t1', _aslist), 'in2'),
+            ]),
+            (bold_std_trans_wf_select_std, merge_xforms_new_std, [('anat2std_xfm', 'in1')]),
+            (
+            merge_xforms_new_std, bold_std_trans_wf_bold_to_std_transform_node, [('out', 'transforms')]),
         ])
         # for each workflow in the list find the subworkflow named bold_hmc_wf and then disconnect it and do the passthrough connections that we need
         """
@@ -454,3 +462,8 @@ def _pop(inlist):
     if isinstance(inlist, (list, tuple)):
         return inlist[0]
     return inlist
+
+def _aslist(in_value):
+    if isinstance(in_value, list):
+        return in_value
+    return [in_value]
