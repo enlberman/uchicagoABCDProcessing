@@ -215,7 +215,7 @@ def init_base_wf(
         from atlasTransform.workflows import atlasTransformWorkflow
         for parcellation in opts.parcellations:
             parcellation_name, number_of_clusters = parcellation.split('_')
-            transformNode = pe.Node(AtlasTransform(), name='transform_%s' % parcellation, iterables='nifti', itersource=merge_deconfounded.name) #output is transformed
+            transformNode = pe.Node(AtlasTransform(), name='transform_%s' % parcellation) #output is transformed
             transformNode.inputs.atlas_name = parcellation_name
             transformNode.inputs.resolution = opts.resolution
             transformNode.inputs.number_of_clusters = int(number_of_clusters)
@@ -224,16 +224,16 @@ def init_base_wf(
             transformNode.inputs.bids_dir = layout.root
 
             wf.connect([
-                (inputnode, transformNode, [('subjects_dir', 'subjects_dir')])
+                (merge_deconfounded, transformNode,[('out', 'nifti')])
             ])
 
             ## now connect parcellation output to hurst and connectivity
-            connectivityNode = pe.Node(FisherRToZMatrix(), name='connectivity_%s' % parcellation) #input is csv output is connectivity
+            connectivityNode = pe.Node(FisherRToZMatrix(), name='connectivity_%s' % parcellation, iterables='csv', itersource=merge_deconfounded.name) #input is csv output is connectivity
             wf.connect([
                 (transformNode, connectivityNode, [('transformed', 'csv')])
             ])
 
-            hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation)
+            hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, iterables='csv', itersource=merge_deconfounded.name)
             wf.connect([
                 (transformNode, hurstNode, [('transformed', 'csv')])
             ])
