@@ -52,6 +52,16 @@ def get_parser() -> ArgumentParser():
                         help='processing stage to be run, only "participant" in the case of '
                              'FMRIPREP (see BIDS-Apps specification).')
 
+    parser.add_argument('--parcellations', action='store', nargs="+", default=['shen_268'],
+        choices=['shen_268', 'craddock_400', 'craddock_270'],
+        help='which parcellations to use (a space delimited list)')
+    parser.add_argument('--resolution', action='store', type=int, default=1,choices=[1,2],
+                        help='parcellation resolution')
+    parser.add_argument('--similarity_measure', action='store', type=str, default='t',choices=['t','s'],
+                        help='craddock parcellation similarity_measure')
+    parser.add_argument('--algorithm', action='store', default='2level', choices=['2level', 'mean', None],
+                        help='craddock parcellation algorithm')
+
     # optional arguments
     parser.add_argument('--version', action='version', version=verstr)
 

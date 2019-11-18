@@ -7,7 +7,6 @@ from niworkflows.interfaces import (
     bids, utils)
 
 from .reports import SubjectSummary, AboutSummary
-from .exampleInterface import DFA
 
 
 class DerivativesDataSink(bids.DerivativesDataSink):
@@ -20,5 +19,4 @@ __all__ = [
     'SubjectSummary',
     'AboutSummary',
     'DerivativesDataSink',
-    'DFA'
 ]
