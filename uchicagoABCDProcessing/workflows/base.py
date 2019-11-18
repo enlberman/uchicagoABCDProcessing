@@ -11,6 +11,7 @@ from nipype import __version__ as nipype_ver
 from fmriprep.workflows.base import init_fmriprep_wf
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
+from nipype.utils.functions import getsource
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.bids import (
@@ -142,31 +143,9 @@ def init_base_wf(
         bold_std_trans_wf_select_std = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'select_std')
 
-        wf.disconnect([
-            (bold_reference_wf, bold_hmc_wf, [
-                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
-                ('outputnode.bold_file', 'inputnode.bold_file'),
-            ]),
-            (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
-            (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
-            (bold_hmc_wf, bold_bold_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
-            (bold_hmc_wf, bold_std_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        ])
-        bold_t1_trans_wf.disconnect([
-            (bold_t1_trans_wf_inputnode, bold_t1_trans_wf_merge_xforms_node, [
-                ('hmc_xforms', 'in2'),
-                ('itk_bold_to_t1', 'in1')]),
-            (bold_t1_trans_wf_merge_xforms_node, bold_t1_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
-        ])
-
-        bold_std_trans_wf.disconnect([
-            (bold_std_trans_wf_inputnode, bold_std_trans_wf_merge_xforms_node, [
-                ('hmc_xforms', 'in3'),
-                (('itk_bold_to_t1', _aslist), 'in2'),
-                ]),
-            (bold_std_trans_wf_select_std, bold_std_trans_wf_merge_xforms_node, [('anat2std_xfm', 'in1')]),
-            (bold_std_trans_wf_merge_xforms_node, bold_std_trans_wf_bold_to_std_transform_node, [('out', 'transforms')]),
-        ])
+        wf.remove_nodes([bold_hmc_wf])
+        bold_std_trans_wf.remove_nodes([bold_std_trans_wf_merge_xforms_node])
+        bold_t1_trans_wf.remove_nodes([bold_t1_trans_wf_merge_xforms_node])
 
         merge_xforms_new = pe.Node(niu.Merge(1), name='merge_xforms_new',
                                run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -175,10 +154,11 @@ def init_base_wf(
             (merge_xforms_new, bold_t1_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
         ])
 
-        merge_xforms_new_std = pe.Node(niu.Merge(2), name='merge_xforms_new',
+        merge_xforms_new_std = pe.Node(niu.Merge(3), name='merge_xforms_new',
                                    run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         bold_std_trans_wf.connect([
             (bold_std_trans_wf_inputnode, merge_xforms_new_std, [
+                ('fieldwarp', 'in3'),
                 (('itk_bold_to_t1', _aslist), 'in2'),
             ]),
             (bold_std_trans_wf_select_std, merge_xforms_new_std, [('anat2std_xfm', 'in1')]),
@@ -217,34 +197,12 @@ def init_base_wf(
         """
         bold_sdc_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'sdc_bypass_wf')
-        bold_split_wf = fmriprep_workflow.get_node(
-            workflow_base_name + '.' + unique_workflow + '.' + 'bold_split_wf')
         carpetplot_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'carpetplot_wf')
         inputnode = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'inputnode')
 
-        wf.disconnect([
-            (bold_sdc_wf, bold_bold_trans_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp'),
-             ('outputnode.bold_mask', 'inputnode.bold_mask')]
-             ),
-            (bold_split_wf, bold_bold_trans_wf, [
-                ('out_files', 'inputnode.bold_file')]
-            ),
-            # (bold_hmc_wf, bold_bold_trans_wf, [
-            #     ('outputnode.xforms', 'inputnode.hmc_xforms')]
-            #  ),
-            (bold_bold_trans_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]
-             ),
-            (bold_bold_trans_wf, bold_std_trans_wf, [('outputnode.bold_mask','inputnode.bold_mask')]),
-            (bold_bold_trans_wf, carpetplot_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]
-            ),
-        ])
+        wf.remove_nodes([bold_bold_trans_wf])
 
         wf.connect([
             (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')]),
