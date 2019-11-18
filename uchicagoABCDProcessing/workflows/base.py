@@ -1,12 +1,14 @@
 from argparse import ArgumentParser
+
+import numpy
 from bids import BIDSLayout
 from nipype import Workflow
 import sys
 import os
 from copy import deepcopy
-from fmriprep.workflows.base import init_fmriprep_wf
 
 from nipype import __version__ as nipype_ver
+from fmriprep.workflows.base import init_fmriprep_wf
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
@@ -15,7 +17,7 @@ from niworkflows.interfaces.bids import (
     BIDSInfo
 )
 
-from neuroHurst.workflows.datasink import init_datasink_wf
+from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB
 from ..utils.bids import collect_data, BIDSPlusDataGrabber
 
 from ..workflows.exampleWorkflow import init_dfa_workflow
@@ -98,80 +100,189 @@ def init_base_wf(
     )
     # todo change this workflow and take out head motion correction from bold
     # todo pass the file locations from fmriprep (bold in mni,regressors, brainmask)
-    from fmriprep.workflows.base import init_fmriprep_wf
+
 
     # func workflows have the name like 'func_preproc_*_wf'
     #* :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
     #init_bold_hmc_wf(name='bold_hmc_wf',
 
     # list of func preproc workflows
+    all_func_workflows = list(filter(lambda node_name: node_name.__contains__("func_preproc"), fmriprep_workflow.list_node_names()))
+    unique_ses_task_func_workflows = numpy.unique(list(map(lambda wf_name: wf_name.split('.')[1], all_func_workflows)))
+    workflow_base_name = all_func_workflows[0].split('.')[0]  ## making a big assumption that this is only being run for one subject at a time
 
+    for unique_workflow in unique_ses_task_func_workflows:
+        print(unique_workflow)
+        wf = fmriprep_workflow.get_node(workflow_base_name + '.' + unique_workflow)
+        bold_reference_wf = fmriprep_workflow.get_node(workflow_base_name + '.' + unique_workflow + '.' + 'bold_reference_wf')
+        bold_hmc_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_hmc_wf')
+        bold_t1_trans_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf')
+        bold_confounds_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_confounds_wf')
 
-    # for each workflow in the list find the subworkflow named bold_hmc_wf and then disconnect it and do the passthrough connections that we need
-    """
-    ****INPUTS****
-    (bold_reference_wf, bold_hmc_wf, [
-            ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),                    ***************** disconnect
-            ('outputnode.bold_file', 'inputnode.bold_file')]),                          ***************** disconnect
-    ****OUTPUTS****
-    (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),   ***************** disconnect
-    (bold_hmc_wf, bold_confounds_wf, [
-            ('outputnode.movpar_file', 'inputnode.movpar_file')]),                      ***************** need to generate this
-    (bold_hmc_wf, bold_bold_trans_wf, [
-            ('outputnode.xforms', 'inputnode.hmc_xforms')]),                            ***************** disconnect
-    ***********************************************************************
-    in the bold_t1_trans_wf we need to replace the inclusion of hmc xforms init_bold_t1_trans_wf(name='bold_t1_trans_wf',
-    merge_xforms = pe.Node(niu.Merge(1), name='merge_xforms',
-                               run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-    ****HOW TO CONNECT**********
-    workflow.connect([
-            # merge transforms
-            (inputnode, merge_xforms, [
-                ('hmc_xforms', 'in%d' % nforms),
+        bold_bold_trans_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_bold_trans_wf')
+        bold_t1_trans_wf_merge_xforms_node = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf' + '.' + 'merge_xforms')
+        bold_t1_trans_wf_bold_to_t1w_transform_node = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf' + '.' + 'bold_to_t1w_transform')
+        bold_t1_trans_wf_inputnode = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_t1_trans_wf' + '.' + 'inputnode')
+
+        bold_std_trans_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf')
+        bold_std_trans_wf_merge_xforms_node = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'merge_xforms')
+        bold_std_trans_wf_bold_to_t1w_transform_node = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'bold_to_t1w_transform')
+        bold_std_trans_wf_inputnode = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'inputnode')
+
+        wf.disconnect([
+            (bold_reference_wf, bold_hmc_wf, [
+                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
+                ('outputnode.bold_file', 'inputnode.bold_file'),
+            ]),
+            (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
+            (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
+            (bold_hmc_wf, bold_bold_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
+            (bold_hmc_wf, bold_std_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
+        ])
+        bold_t1_trans_wf.disconnect([
+            (bold_t1_trans_wf_inputnode, bold_t1_trans_wf_merge_xforms_node, [
+                ('hmc_xforms', 'in2'),
                 ('itk_bold_to_t1', 'in1')]),
-            (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-    ************************************************************************
-    
-    """
+            (bold_t1_trans_wf_merge_xforms_node, bold_t1_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
+        ])
 
-    ##we dont nee the bold bold trans wf
-    """
-    bold_bold_trans_wf = init_bold_preproc_trans_wf(
-        mem_gb=mem_gb['resampled'],
-        omp_nthreads=omp_nthreads,
-        use_compression=not low_mem,
-        use_fieldwarp=(fmaps is not None or use_syn),
-        name='bold_bold_trans_wf'
-    )
-                **Outputs**            
-                    bold
-                        BOLD series, resampled in native space, including all preprocessing
-                    bold_mask
-                        BOLD series mask calculated with the new time-series
-                    bold_ref
-                        BOLD reference image: an average-like 3D image of the time-series
-                    bold_ref_brain
-                        Same as ``bold_ref``, but once the brain mask has been applied
-    *****INPUTS****
-    (bold_sdc_wf, bold_bold_trans_wf, [
-            ('outputnode.out_warp', 'inputnode.fieldwarp'),             ***************** disconnect
-            ('outputnode.bold_mask', 'inputnode.bold_mask')]),          ***************** disconnect
-    (bold_split, bold_bold_trans_wf, [
-            ('out_files', 'inputnode.bold_file')]),                     ***************** disconnect
-    (bold_hmc_wf, bold_bold_trans_wf, [
-            ('outputnode.xforms', 'inputnode.hmc_xforms')]),            ***************** disconnect
-    ****OUTPUTS****       
-    (bold_bold_trans_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),                  ****************** replace with (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')])
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),      ****************** replace with (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
-    (bold_bold_trans_wf if not multiecho else bold_t2s_wf, bold_std_trans_wf, [     
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),      ****************** replace with (bold_sdc_wf, bold_std_trans_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
-    (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
-                    ('outputnode.bold', 'inputnode.bold'),              ****************** replace with (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')])
-                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),  ****************** replace with (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
-    """
+        bold_std_trans_wf.disconnect([
+            (bold_std_trans_wf_inputnode, bold_std_trans_wf_merge_xforms_node, [
+                ('hmc_xforms', 'in2'),
+                ('itk_bold_to_t1', 'in1')]),
+            (bold_std_trans_wf_merge_xforms_node, bold_std_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
+        ])
 
+        merge_xforms_new = pe.Node(niu.Merge(1), name='merge_xforms_new',
+                               run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+        bold_t1_trans_wf.connect([
+            (bold_t1_trans_wf_inputnode, merge_xforms_new, [('itk_bold_to_t1', 'in1')]),
+            (merge_xforms_new, bold_t1_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
+        ])
 
+        merge_xforms_new_std = pe.Node(niu.Merge(1), name='merge_xforms_new',
+                                   run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+        bold_std_trans_wf.connect([
+            (bold_std_trans_wf_inputnode, merge_xforms_new_std, [('itk_bold_to_t1', 'in1')]),
+            (merge_xforms_new_std, bold_std_trans_wf_bold_to_t1w_transform_node, [('out', 'transforms')]),
+        ])
+        # for each workflow in the list find the subworkflow named bold_hmc_wf and then disconnect it and do the passthrough connections that we need
+        """
+        ****INPUTS****
+        (bold_reference_wf, bold_hmc_wf, [
+                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),                    ***************** disconnect
+                ('outputnode.bold_file', 'inputnode.bold_file')]),                          ***************** disconnect
+        ****OUTPUTS****
+        (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),   ***************** disconnect
+        (bold_hmc_wf, bold_confounds_wf, [
+                ('outputnode.movpar_file', 'inputnode.movpar_file')]),                      ***************** need to generate this
+                ********************************************************************************************************
+                movpar_file
+                MCFLIRT motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
+                **********************************************************************************************************
+        (bold_hmc_wf, bold_bold_trans_wf, [
+                ('outputnode.xforms', 'inputnode.hmc_xforms')]),                            ***************** disconnect
+        ***********************************************************************
+        in the bold_t1_trans_wf we need to replace the inclusion of hmc xforms init_bold_t1_trans_wf(name='bold_t1_trans_wf',
+        merge_xforms = pe.Node(niu.Merge(1), name='merge_xforms',
+                                   run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ****HOW TO CONNECT**********
+        workflow.connect([
+                # merge transforms
+                (inputnode, merge_xforms, [
+                    ('hmc_xforms', 'in%d' % nforms),
+                    ('itk_bold_to_t1', 'in1')]),
+                (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
+        ************************************************************************
+        
+        """
+        bold_sdc_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'sdc_bypass_wf')
+        bold_split_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'bold_split_wf')
+        carpetplot_wf = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'carpetplot_wf')
+        inputnode = fmriprep_workflow.get_node(
+            workflow_base_name + '.' + unique_workflow + '.' + 'inputnode')
+
+        wf.disconnect([
+            (bold_sdc_wf, bold_bold_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp'),
+             ('outputnode.bold_mask', 'inputnode.bold_mask')]
+             ),
+            (bold_split_wf, bold_bold_trans_wf, [
+                ('out_files', 'inputnode.bold_file')]
+            ),
+            # (bold_hmc_wf, bold_bold_trans_wf, [
+            #     ('outputnode.xforms', 'inputnode.hmc_xforms')]
+            #  ),
+            (bold_bold_trans_wf, bold_confounds_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]
+             ),
+            (bold_bold_trans_wf, bold_std_trans_wf, [('outputnode.bold_mask','inputnode.bold_mask')]),
+            (bold_bold_trans_wf, carpetplot_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]
+            ),
+        ])
+
+        wf.connect([
+            (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')]),
+            (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_sdc_wf, bold_std_trans_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')]),
+            (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
+        ])
+        ##we dont nee the bold bold trans wf
+        """
+        bold_bold_trans_wf = init_bold_preproc_trans_wf(
+            mem_gb=mem_gb['resampled'],
+            omp_nthreads=omp_nthreads,
+            use_compression=not low_mem,
+            use_fieldwarp=(fmaps is not None or use_syn),
+            name='bold_bold_trans_wf'
+        )
+                    **Outputs**            
+                        bold
+                            BOLD series, resampled in native space, including all preprocessing
+                        bold_mask
+                            BOLD series mask calculated with the new time-series
+                        bold_ref
+                            BOLD reference image: an average-like 3D image of the time-series
+                        bold_ref_brain
+                            Same as ``bold_ref``, but once the brain mask has been applied
+        *****INPUTS****
+        (bold_sdc_wf, bold_bold_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp'),             ***************** disconnect
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),          ***************** disconnect
+        (bold_split, bold_bold_trans_wf, [
+                ('out_files', 'inputnode.bold_file')]),                     ***************** disconnect
+        (bold_hmc_wf, bold_bold_trans_wf, [
+                ('outputnode.xforms', 'inputnode.hmc_xforms')]),            ***************** disconnect
+        ****OUTPUTS****       
+        (bold_bold_trans_wf, bold_confounds_wf, [
+                    ('outputnode.bold', 'inputnode.bold'),                  ****************** replace with (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')])
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),      ****************** replace with (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
+        (bold_bold_trans_wf if not multiecho else bold_t2s_wf, bold_std_trans_wf, [     
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),      ****************** replace with (bold_sdc_wf, bold_std_trans_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
+        (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
+                        ('outputnode.bold', 'inputnode.bold'),              ****************** replace with (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')])
+                        ('outputnode.bold_mask', 'inputnode.bold_mask')]),  ****************** replace with (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
+        """
+
+        print()
     # connect outputs to new pieces of confound regression hurst,matrices, and parcellation
     """
     (bold_std_trans_wf, func_derivatives_wf, [
