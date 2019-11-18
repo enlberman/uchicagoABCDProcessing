@@ -85,13 +85,6 @@ def init_base_wf(
         use_syn=use_syn,
         work_dir=str(work_dir),
     )
-    # todo change this workflow and take out head motion correction from bold
-    # todo pass the file locations from fmriprep (bold in mni,regressors, brainmask)
-
-
-    # func workflows have the name like 'func_preproc_*_wf'
-    #* :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
-    #init_bold_hmc_wf(name='bold_hmc_wf',
 
     # list of func preproc workflows
     all_func_workflows = list(filter(lambda node_name: node_name.__contains__("func_preproc"), fmriprep_workflow.list_node_names()))
@@ -99,7 +92,7 @@ def init_base_wf(
     workflow_base_name = all_func_workflows[0].split('.')[0]  ## making a big assumption that this is only being run for one subject at a time
 
     for unique_workflow in unique_ses_task_func_workflows:
-        print(unique_workflow)
+        # collect all the nodes that we need to disconnect hmc (head motion correction) and bold_bold_trans (bold realignment) workflows
         wf = fmriprep_workflow.get_node(workflow_base_name + '.' + unique_workflow)
         bold_hmc_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_hmc_wf')
@@ -128,7 +121,9 @@ def init_base_wf(
         bold_std_trans_wf_select_std = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'bold_std_trans_wf' + '.' + 'select_std')
 
-        wf.remove_nodes([bold_hmc_wf])
+        wf.remove_nodes([bold_hmc_wf])  # disconnect hmc workflow
+
+        # disconnect merge xform nodes we replace them below
         bold_std_trans_wf.remove_nodes([bold_std_trans_wf_merge_xforms_node])
         bold_t1_trans_wf.remove_nodes([bold_t1_trans_wf_merge_xforms_node])
 
@@ -150,6 +145,8 @@ def init_base_wf(
             (
             merge_xforms_new_std, bold_std_trans_wf_bold_to_std_transform_node, [('out', 'transforms')]),
         ])
+
+        # collect some more nodes necessary for removing the bold bold trans (realignment) workflow
         bold_sdc_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'sdc_bypass_wf')
         carpetplot_wf = fmriprep_workflow.get_node(
@@ -157,8 +154,10 @@ def init_base_wf(
         inputnode = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'inputnode')
 
+        # remove the realignment workflow
         wf.remove_nodes([bold_bold_trans_wf])
 
+        # rewire the workflow after removing the bold bold trans and hmc workflows
         wf.connect([
             (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')]),
             (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -195,6 +194,7 @@ def init_base_wf(
             (bold_confounds_wf, confoundRegressionNode, [('outputnode.confounds_file', 'regressors')]),
         ])
 
+        # add despike
         despikeNode = pe.Node(afni.Despike(), name='despike') #output is out_file
         despikeNode.inputs.outputtype = 'NIFTI_GZ'
         despikeNode.inputs.args = '-NEW25'
@@ -203,19 +203,21 @@ def init_base_wf(
             (confoundRegressionNode, despikeNode, [('regressed', 'in_file')]),
             ])
 
-        #####
+        # get a list of all the deconfounded outputs for final stages of processing below
         merge_deconfounded = pe.Node(niu.Merge(2), name='merge_deconfounded',
                                        run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+
         wf.connect([
             (confoundRegressionNode, merge_deconfounded, [('regressed', 'in1')]),
             (despikeNode, merge_deconfounded, [('out_file', 'in2')])
         ])
 
-        # add parcellation
-        from atlasTransform.workflows import atlasTransformWorkflow
+        # do each parcellation and final processing seperately
         for parcellation in opts.parcellations:
-            parcellation_name, number_of_clusters = parcellation.split('_')
+            parcellation_name, number_of_clusters = parcellation.split('_') # e.g. parcellation='craddock_400'
             transformNode = pe.Node(AtlasTransform(), name='transform_%s' % parcellation) #output is transformed
+
+            # setup the inputs for the parcellation node
             transformNode.inputs.atlas_name = parcellation_name
             transformNode.inputs.resolution = opts.resolution
             transformNode.inputs.number_of_clusters = int(number_of_clusters)
@@ -223,6 +225,7 @@ def init_base_wf(
             transformNode.inputs.algorithm = opts.algorithm
             transformNode.inputs.bids_dir = layout.root
 
+            # connectup the parcellation node
             wf.connect([
                 (merge_deconfounded, transformNode,[('out', 'nifti')])
             ])
@@ -238,7 +241,6 @@ def init_base_wf(
                 (transformNode, hurstNode, [('transformed', 'csv')])
             ])
 
-        print()
     return fmriprep_workflow
 
 
