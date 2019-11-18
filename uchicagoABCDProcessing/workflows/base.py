@@ -244,7 +244,6 @@ def init_base_wf(
     return fmriprep_workflow
 
 
-
 def _prefix(subid):
     if subid.startswith('sub-'):
         return subid
