@@ -7,6 +7,8 @@ import warnings
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 
+from uchicagoABCDProcessing.interfaces.oracle import OracleQuery
+
 from uchicagoABCDProcessing.cli.version import check_latest, is_flagged
 
 
@@ -54,13 +56,23 @@ def get_parser() -> ArgumentParser():
 
     parser.add_argument('--parcellations', action='store', nargs="+", default=['shen_268'],
         choices=['shen_268', 'craddock_400', 'craddock_270'],
-        help='which parcellations to use (a space delimited list)')
+        help='which parcellations to use (a space delimited list)', required=True,)
     parser.add_argument('--resolution', action='store', type=int, default=1,choices=[1,2],
-                        help='parcellation resolution')
+                        help='parcellation resolution', required=True,)
     parser.add_argument('--similarity_measure', action='store', type=str, default='t',choices=['t','s'],
-                        help='craddock parcellation similarity_measure')
+                        help='craddock parcellation similarity_measure', required=True,)
     parser.add_argument('--algorithm', action='store', default='2level', choices=['2level', 'mean', None],
-                        help='craddock parcellation algorithm')
+                        help='craddock parcellation algorithm', required=True,)
+
+    parser.add_argument('--miNDAR_host', action='store', type=str, required=True,
+                        help='miDNAR host')
+    parser.add_argument('--miNDAR_password', action='store', type=str, required=True,
+                        help='miDNAR password')
+    parser.add_argument('--miNDAR_username', action='store', type=str, required=True,
+                        help='miDNAR username')
+
+    parser.add_argument('--skip_download', action='store', type=bool, required=True, default=False,
+                        help='skip downloading subject data')
 
     # optional arguments
     parser.add_argument('--version', action='version', version=verstr)
@@ -324,6 +336,17 @@ def get_workflow(logger):
         import sentry_sdk
         from ..utils.sentry import sentry_setup
         sentry_setup(opts, exec_env)
+
+    if not opts.skip_download:
+        get_files = OracleQuery()
+        get_files.inputs.username = opts.miNDAR_username
+        get_files.inputs.password = opts.miNDAR_password
+        get_files.inputs.host = opts.miNDAR_host
+        get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label
+
+        get_files.run()
+
+        print()
 
     # Validate inputs
     if not opts.skip_bids_validation:

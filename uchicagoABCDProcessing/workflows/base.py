@@ -86,6 +86,11 @@ def init_base_wf(
         work_dir=str(work_dir),
     )
 
+    """
+    make fake dir
+    """
+
+
     # list of func preproc workflows
     all_func_workflows = list(filter(lambda node_name: node_name.__contains__("func_preproc"), fmriprep_workflow.list_node_names()))
     unique_ses_task_func_workflows = numpy.unique(list(map(lambda wf_name: wf_name.split('.')[1], all_func_workflows)))
@@ -241,6 +246,17 @@ def init_base_wf(
                 (transformNode, hurstNode, [('transformed', 'csv')])
             ])
 
+    #finally setup the download workflow and connect it up
+    bids_src = fmriprep_workflow.get_node(workflow_base_name + '.' + 'bidssrc')
+    opts.download_dir
+    """
+    need to connect
+    bids_src.inpus.subject_data:
+    bids_info = pe.Node(BIDSInfo(
+        bids_dir=layout.root, bids_validate=False), name='bids_info')
+        anat derivatives workflow raw_sources.inputs.bids_root = bids_root
+    """
+    print()
     return fmriprep_workflow
 
 

@@ -11,7 +11,6 @@ LOGGER = logging.getLogger('nipype.interface')
 
 
 class OracleQueryInputSpec(TraitedSpec):
-    subject_id = traits.String( mandatory=False, desc='subject identifier')
     username = traits.String(mandatory=True, desc='username for database')
     password = traits.String(mandatory=True, desc='passowrd for database')
     host = traits.String(mandatory=True, desc='host address for database')
