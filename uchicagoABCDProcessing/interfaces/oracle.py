@@ -14,13 +14,14 @@ class OracleQueryInputSpec(TraitedSpec):
     username = traits.String(mandatory=True, desc='username for database')
     password = traits.String(mandatory=True, desc='passowrd for database')
     host = traits.String(mandatory=True, desc='host address for database')
-    service = traits.String(mandatory=False, default_value='ORCL', desc='database service')
+    service = traits.String(mandatory=True, desc='database service')
     query = traits.String(mandator=True, desc='oracle sql query')
+    write_to_file = traits.Bool(default_value=True, desc='write to output file')
 
 
 class OracleQueryOutputSpec(TraitedSpec):
     out_report = File(exists=True, desc='conformation report')
-    out = File(exists=True, desc='result of database query')
+    out = traits.Any(exists=True, desc='result of database query')
 
 
 class OracleQuery(SimpleInterface):
@@ -43,9 +44,12 @@ class OracleQuery(SimpleInterface):
             cursor.execute(self.inputs.query)  # execute the sql
             rows = cursor.fetchall()  # retrieve the results
             out = pandas.DataFrame(rows)  # convert to pandas format
-            out_file = os.path.join(os.getcwd(), 'oracle_query_output.csv')  # make the output filename
-            out.to_csv(out_file)  # write out the results
-            self._results['out'] = out_file  # set the interface output
+            if self.inputs.write_to_file:
+                out_file = os.path.join(os.getcwd(), 'oracle_query_output.csv')  # make the output filename
+                out.to_csv(out_file)  # write out the results
+                self._results['out'] = out_file  # set the interface output
+            else:
+                self._results['out'] = out
         except cx_Oracle.DatabaseError as e:
             print("There was a problem with Oracle: ",  e)
         finally:

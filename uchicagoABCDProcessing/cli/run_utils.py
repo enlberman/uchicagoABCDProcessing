@@ -7,6 +7,8 @@ import warnings
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 
+import numpy
+
 from uchicagoABCDProcessing.interfaces.oracle import OracleQuery
 
 from uchicagoABCDProcessing.cli.version import check_latest, is_flagged
@@ -58,20 +60,20 @@ def get_parser() -> ArgumentParser():
         choices=['shen_268', 'craddock_400', 'craddock_270'],
         help='which parcellations to use (a space delimited list)', required=True,)
     parser.add_argument('--resolution', action='store', type=int, default=1,choices=[1,2],
-                        help='parcellation resolution', required=True,)
+                        help='parcellation resolution', )
     parser.add_argument('--similarity_measure', action='store', type=str, default='t',choices=['t','s'],
-                        help='craddock parcellation similarity_measure', required=True,)
+                        help='craddock parcellation similarity_measure', )
     parser.add_argument('--algorithm', action='store', default='2level', choices=['2level', 'mean', None],
-                        help='craddock parcellation algorithm', required=True,)
+                        help='craddock parcellation algorithm', )
 
-    parser.add_argument('--miNDAR_host', action='store', type=str, required=True,
+    parser.add_argument('--miNDAR_host', action='store', type=str,
                         help='miDNAR host')
-    parser.add_argument('--miNDAR_password', action='store', type=str, required=True,
+    parser.add_argument('--miNDAR_password', action='store', type=str,
                         help='miDNAR password')
-    parser.add_argument('--miNDAR_username', action='store', type=str, required=True,
+    parser.add_argument('--miNDAR_username', action='store', type=str,
                         help='miDNAR username')
 
-    parser.add_argument('--skip_download', action='store', type=bool, required=True, default=False,
+    parser.add_argument('--skip_download', action='store', type=bool, default=False,
                         help='skip downloading subject data')
 
     # optional arguments
@@ -342,9 +344,23 @@ def get_workflow(logger):
         get_files.inputs.username = opts.miNDAR_username
         get_files.inputs.password = opts.miNDAR_password
         get_files.inputs.host = opts.miNDAR_host
-        get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label
+        get_files.inputs.service = 'ORCL'
+        get_files.inputs.write_to_file=False
 
+        get_files.inputs.query = "select column_name from USER_TAB_COLUMNS where table_name = 'FMRIRESULTS01'"
         get_files.run()
+        columns = get_files._results['out'].values.flatten()
+        scan_type = numpy.argwhere(columns == 'SCAN_TYPE').flatten()[0]
+        file_link = numpy.argwhere(columns == 'DERIVED_FILES').flatten()[0]
+
+        get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label[0]
+        get_files.run()
+        subject_files = get_files._results['out']
+
+        func_files = subject_files[subject_files[scan_type] =='fMRI'][file_link].values
+        anat_files = subject_files[subject_files[scan_type] =='MR structural (T1)'][file_link].values
+        ## where are the links to the motion parameters file?
+        print(func_files)
 
         print()
 
