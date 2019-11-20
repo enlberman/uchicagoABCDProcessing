@@ -384,7 +384,7 @@ def get_workflow(logger):
                 file.writelines(link+'\n')
 
         download_dir = os.path.join(opts.work_dir,'downloads')
-        os.system("echo $'%s' | echo $'%s' | downloadcmd %s -t -d %s -u %s -p %s" % (secret_key,access_key,download_links, download_dir, opts.nda_username, opts.nda_password)) # download all the files
+        os.system("downloadcmd %s -t -d %s -u %s -p %s" % (download_links, download_dir, opts.nda_username, opts.nda_password)) # download all the files
 
         bids_dir = os.path.join(opts.work_dir,'bids')
         subject_dir = os.path.join(bids_dir, 'sub-%s' % opts.participant_label[0].replace('_',''))
