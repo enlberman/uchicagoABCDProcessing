@@ -348,6 +348,14 @@ def get_workflow(logger):
         from ..utils.sentry import sentry_setup
         sentry_setup(opts, exec_env)
 
+    aws_token_info = os.popen(
+        "bash $NDA_TOKEN_GEN_DIR/curl/generate_token.sh '%s' '%s' 'https://nda.nih.gov/DataManager/dataManager'"
+        % (opts.nda_username, opts.nda_password)
+    ).readlines()
+    secret_key = aws_token_info[2].split(':')[1].strip()
+    access_key = aws_token_info[1].split(':')[1].strip()
+    session_token = aws_token_info[3].split(':')[1].strip()
+
     if not opts.skip_download:
         # get_files = OracleQuery()
         # get_files.inputs.username = opts.miNDAR_username
@@ -376,10 +384,10 @@ def get_workflow(logger):
                 file.writelines(link+'\n')
 
         download_dir = os.path.join(opts.work_dir,'downloads')
-        os.system("echo $'\r' | echo $'\r' | downloadcmd %s -t -d %s -u %s -p %s" % (download_links, download_dir, opts.nda_username, opts.nda_password)) # download all the files
+        os.system("echo $'%s' | echo $'%s' | downloadcmd %s -t -d %s -u %s -p %s" % (secret_key,access_key,download_links, download_dir, opts.nda_username, opts.nda_password)) # download all the files
 
         bids_dir = os.path.join(opts.work_dir,'bids')
-        subject_dir = os.path.join(bids_dir, 'sub-%s' % opts.participant_label.replace('_',''))
+        subject_dir = os.path.join(bids_dir, 'sub-%s' % opts.participant_label[0].replace('_',''))
         session_dir = os.path.join(subject_dir, opts.session)
         func_dir = os.path.join(session_dir,'func')
         anat_dir = os.path.join(session_dir, 'anat')
