@@ -7,7 +7,6 @@ from niworkflows.interfaces import (
     bids, utils)
 
 from .reports import SubjectSummary, AboutSummary
-from .awsS3 import S3Download
 
 
 class DerivativesDataSink(bids.DerivativesDataSink):
@@ -20,5 +19,4 @@ __all__ = [
     'SubjectSummary',
     'AboutSummary',
     'DerivativesDataSink',
-    'S3Download'
 ]
