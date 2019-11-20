@@ -1,3 +1,4 @@
+import glob
 import os
 from pathlib import Path
 import logging
@@ -72,6 +73,14 @@ def get_parser() -> ArgumentParser():
                         help='miDNAR password')
     parser.add_argument('--miNDAR_username', action='store', type=str,
                         help='miDNAR username')
+    parser.add_argument('--nda_username', action='store', type=str,
+                        help='NDA username')
+    parser.add_argument('--nda_password', action='store', type=str,
+                        help='nda password')
+
+    parser.add_argument('--session', action='store', type=str, default='ses-baselineYear1Arm1',
+                        choices=['ses-baselineYear1Arm1'],
+                        help='which session')
 
     parser.add_argument('--skip_download', action='store', type=bool, default=False,
                         help='skip downloading subject data')
@@ -357,12 +366,40 @@ def get_workflow(logger):
         get_files.run()
         subject_files = get_files._results['out']
 
-        func_files = subject_files[subject_files[scan_type] =='fMRI'][file_link].values
-        anat_files = subject_files[subject_files[scan_type] =='MR structural (T1)'][file_link].values
+        anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
         ## where are the links to the motion parameters file?
-        print(func_files)
+        download_links = os.path.join(opts.work_dir,'alls3.txt')
+        os.makedirs(Path(download_links).parent, exist_ok=True)
+        with open(download_links,'w') as file:
+            for link in anat_and_func_files:
+                file.writelines(link+'\n')
 
-        print()
+        download_dir = os.path.join(opts.work_dir,'downloads')
+        os.system("echo $'\r' | echo $'\r' | downloadcmd %s -t -d %s" % (download_links, download_dir)) # download all the files
+
+        bids_dir = os.path.join(opts.work_dir,'bids')
+        subject_dir = os.path.join(bids_dir, 'sub-%s' % opts.participant_label.replace('_',''))
+        session_dir = os.path.join(subject_dir, opts.session)
+        func_dir = os.path.join(session_dir,'func')
+        anat_dir = os.path.join(session_dir, 'anat')
+
+        os.makedirs(func_dir, exist_ok=True)
+        os.makedirs(anat_dir, exist_ok=True)
+
+        downloaded_files = glob.glob(os.path.join(download_dir,"*","*.tgz"))
+
+        for download in downloaded_files:  # untar files
+            os.system('tar zxvf %s' % download)
+
+        downloaded_func_files = glob.glob(os.path.join(download_dir,"*","*","*","func","*"))
+        downloaded_anat_files = glob.glob(os.path.join(download_dir, "*", "*", "*", "anat", "*"))
+
+        for file in downloaded_func_files:
+            os.system('mv %s %s' % (file, func_dir))
+
+        for file in downloaded_anat_files:
+            os.system('mv %s %s' % (file, anat_dir))
+        opts.bids_dir = bids_dir
 
     # Validate inputs
     if not opts.skip_bids_validation:
