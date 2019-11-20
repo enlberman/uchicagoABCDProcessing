@@ -349,25 +349,26 @@ def get_workflow(logger):
         sentry_setup(opts, exec_env)
 
     if not opts.skip_download:
-        get_files = OracleQuery()
-        get_files.inputs.username = opts.miNDAR_username
-        get_files.inputs.password = opts.miNDAR_password
-        get_files.inputs.host = opts.miNDAR_host
-        get_files.inputs.service = 'ORCL'
-        get_files.inputs.write_to_file=False
+        # get_files = OracleQuery()
+        # get_files.inputs.username = opts.miNDAR_username
+        # get_files.inputs.password = opts.miNDAR_password
+        # get_files.inputs.host = opts.miNDAR_host
+        # get_files.inputs.service = 'ORCL'
+        # get_files.inputs.write_to_file=False
+        #
+        # get_files.inputs.query = "select column_name from USER_TAB_COLUMNS where table_name = 'FMRIRESULTS01'"
+        # get_files.run()
+        # columns = get_files._results['out'].values.flatten()
+        # scan_type = numpy.argwhere(columns == 'SCAN_TYPE').flatten()[0]
+        # file_link = numpy.argwhere(columns == 'DERIVED_FILES').flatten()[0]
+        #
+        # get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label[0]
+        # get_files.run()
+        # subject_files = get_files._results['out']
+        #
+        # anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
+        anat_and_func_files = ['s3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414114436.tgz', 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz', 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz', 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz', 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz', 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123343.tgz', 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-T1_20170414113634.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz']
 
-        get_files.inputs.query = "select column_name from USER_TAB_COLUMNS where table_name = 'FMRIRESULTS01'"
-        get_files.run()
-        columns = get_files._results['out'].values.flatten()
-        scan_type = numpy.argwhere(columns == 'SCAN_TYPE').flatten()[0]
-        file_link = numpy.argwhere(columns == 'DERIVED_FILES').flatten()[0]
-
-        get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label[0]
-        get_files.run()
-        subject_files = get_files._results['out']
-
-        anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
-        ## where are the links to the motion parameters file?
         download_links = os.path.join(opts.work_dir,'alls3.txt')
         os.makedirs(Path(download_links).parent, exist_ok=True)
         with open(download_links,'w') as file:
