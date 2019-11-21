@@ -389,10 +389,9 @@ def get_workflow(logger):
             password=opts.nda_password,
             secret_key=secret_key,
             access_key=access_key,
-            settings_file=os.path.join(Path(__file__).parent.parent, 'config/NDATools/settings.cfg')
+            settings_file='clientscripts/config/settings.cfg'
         )
         nda_config.make_config()
-
 
         download_dir = os.path.join(opts.work_dir,'downloads')
         os.system("downloadcmd %s -t -d %s" % (download_links, download_dir)) # download all the files
