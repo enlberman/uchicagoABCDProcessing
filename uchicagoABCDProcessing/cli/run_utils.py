@@ -7,6 +7,7 @@ import gc
 import warnings
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
+from NDATools.Configuration import ClientConfiguration
 
 import numpy
 
@@ -383,8 +384,18 @@ def get_workflow(logger):
             for link in anat_and_func_files:
                 file.writelines(link+'\n')
 
+        nda_config = ClientConfiguration(
+            username=opts.nda_username,
+            password=opts.nda_password,
+            secret_key=secret_key,
+            access_key=access_key,
+            settings_file=os.path.join(os.path.expanduser('~'), '.NDATools/settings.cfg')
+        )
+        nda_config.make_config()
+
+
         download_dir = os.path.join(opts.work_dir,'downloads')
-        os.system("downloadcmd %s -t -d %s -u %s -p %s" % (download_links, download_dir, opts.nda_username, opts.nda_password)) # download all the files
+        os.system("downloadcmd %s -t -d %s" % (download_links, download_dir)) # download all the files
 
         bids_dir = os.path.join(opts.work_dir,'bids')
         subject_dir = os.path.join(bids_dir, 'sub-%s' % opts.participant_label[0].replace('_',''))
