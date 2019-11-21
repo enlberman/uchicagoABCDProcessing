@@ -247,8 +247,7 @@ def init_base_wf(
             ])
 
     #finally setup the download workflow and connect it up
-    bids_src = fmriprep_workflow.get_node(workflow_base_name + '.' + 'bidssrc')
-    opts.download_dir
+    # bids_src = fmriprep_workflow.get_node(workflow_base_name + '.' + 'bidssrc')
     """
     need to connect
     bids_src.inpus.subject_data:
