@@ -410,8 +410,14 @@ def get_workflow(logger):
         for download in downloaded_files:  # untar files
             os.system('tar zxvf %s -C %s' % (download, download_dir))
 
-        downloaded_func_files = glob.glob(os.path.join(download_dir,"*","*","*","func","*"))
-        downloaded_anat_files = glob.glob(os.path.join(download_dir, "*", "*", "*", "anat", "*"))
+        downloaded_func_files = glob.glob(os.path.join(download_dir,
+                                                       'sub-%s' % opts.participant_label[0].replace('_',''),
+                                                       opts.session,"func","*")
+                                          )
+        downloaded_anat_files = glob.glob(os.path.join(download_dir,
+                                                       'sub-%s' % opts.participant_label[0].replace('_',''),
+                                                       opts.session,"anat","*")
+                                          )
 
         for file in downloaded_func_files:
             os.system('mv %s %s' % (file, func_dir))
