@@ -408,7 +408,7 @@ def get_workflow(logger):
         downloaded_files = glob.glob(os.path.join(download_dir,"*","*.tgz"))
 
         for download in downloaded_files:  # untar files
-            os.system('tar zxvf %s' % download)
+            os.system('tar zxvf %s -C %s' % (download, download_dir))
 
         downloaded_func_files = glob.glob(os.path.join(download_dir,"*","*","*","func","*"))
         downloaded_anat_files = glob.glob(os.path.join(download_dir, "*", "*", "*", "anat", "*"))
