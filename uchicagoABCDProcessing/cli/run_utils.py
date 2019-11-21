@@ -410,7 +410,7 @@ def get_workflow(logger):
 
         for download in downloaded_files:  # untar files
             print('untaring %s' % download)
-            os.system('tar zxvf %s -C %s' % (download, download_dir))
+            os.system('tar zxvf %s -C %s' % (download, bids_dir))
             print()
 
         downloaded_func_files = glob.glob(os.path.join(download_dir,
@@ -422,11 +422,11 @@ def get_workflow(logger):
                                                        opts.session,"anat","*")
                                           )
 
-        for file in downloaded_func_files:
-            os.system('mv %s %s' % (file, func_dir))
-
-        for file in downloaded_anat_files:
-            os.system('mv %s %s' % (file, anat_dir))
+        # for file in downloaded_func_files:
+        #     os.system('mv %s %s' % (file, func_dir))
+        #
+        # for file in downloaded_anat_files:
+        #     os.system('mv %s %s' % (file, anat_dir))
         opts.bids_dir = BIDSLayout(bids_dir) #cant just do this need the layout object
 
     # Validate inputs
