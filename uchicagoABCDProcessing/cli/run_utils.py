@@ -409,7 +409,9 @@ def get_workflow(logger):
         downloaded_files = glob.glob(os.path.join(download_dir,"*","*.tgz"))
 
         for download in downloaded_files:  # untar files
+            print('untaring %s' % download)
             os.system('tar zxvf %s -C %s' % (download, download_dir))
+            print()
 
         downloaded_func_files = glob.glob(os.path.join(download_dir,
                                                        'sub-%s' % opts.participant_label[0].replace('_',''),
