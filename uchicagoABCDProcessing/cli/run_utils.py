@@ -427,7 +427,7 @@ def get_workflow(logger):
         #
         # for file in downloaded_anat_files:
         #     os.system('mv %s %s' % (file, anat_dir))
-        opts.bids_dir = BIDSLayout(bids_dir) #cant just do this need the layout object
+        opts.bids_dir = Path(bids_dir) #cant just do this need the layout object
 
     # Validate inputs
     if not opts.skip_bids_validation:
