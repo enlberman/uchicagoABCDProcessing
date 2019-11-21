@@ -428,7 +428,7 @@ def get_workflow(logger):
         # for file in downloaded_anat_files:
         #     os.system('mv %s %s' % (file, anat_dir))
         opts.bids_dir = Path(bids_dir) #cant just do this need the layout object
-        opts.participant_label = opts.participant_label.replace('_','')
+        opts.participant_label = opts.participant_label[0].replace('_','')
 
     # Validate inputs
     if not opts.skip_bids_validation:
