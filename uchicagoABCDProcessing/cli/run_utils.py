@@ -389,7 +389,7 @@ def get_workflow(logger):
             password=opts.nda_password,
             secret_key=secret_key,
             access_key=access_key,
-            settings_file=os.path.join(os.path.expanduser('~'), '.NDATools/settings.cfg')
+            settings_file=os.path.join(Path(__file__).parent.parent, 'config/NDATools/settings.cfg')
         )
         nda_config.make_config()
 

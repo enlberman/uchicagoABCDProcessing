@@ -1,2 +1,3 @@
 include versioneer.py
 include uchicagoABCDProcessing/_version.py
+include uchicagoABCDProcessing/config/NDATools/settings.cfg
