@@ -10,6 +10,7 @@ from fmriprep.workflows.base import init_fmriprep_wf
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
 
+from uchicagoABCDProcessing.interfaces import Motion
 from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB
 
 
@@ -170,15 +171,14 @@ def init_base_wf(
             (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')]),
             (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
         ])
-        # todo add the connection for existing motion correction to the bold confounds workflow
-        """
-        (bold_hmc_wf, bold_confounds_wf, [
-                ('outputnode.movpar_file', 'inputnode.movpar_file')]),                      ***************** need to generate this
-                ********************************************************************************************************
-                movpar_file
-                MCFLIRT motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
-                **********************************************************************************************************
-        """
+
+        motionNode = pe.Node(Motion(),name='motion_file', run_without_submitting=True,mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+        wf.connect([
+            (inputnode, motionNode, [('bold_file', 'bold')]),
+            (motionNode, bold_confounds_wf), [('out', 'inputnode.movpar_file')]
+        ])
+
 
         """
         (bold_std_trans_wf, func_derivatives_wf, [

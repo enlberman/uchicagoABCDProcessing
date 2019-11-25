@@ -7,7 +7,7 @@ from niworkflows.interfaces import (
     bids, utils)
 
 from .reports import SubjectSummary, AboutSummary
-
+from .motion import Motion
 
 class DerivativesDataSink(bids.DerivativesDataSink):
     out_path_base = 'uchicagoABCDProcessing'
@@ -19,4 +19,5 @@ __all__ = [
     'SubjectSummary',
     'AboutSummary',
     'DerivativesDataSink',
+    'Motion',
 ]

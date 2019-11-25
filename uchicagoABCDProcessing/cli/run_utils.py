@@ -377,7 +377,18 @@ def get_workflow(logger):
         # subject_files = get_files._results['out']
         #
         # anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
-        anat_and_func_files = ['s3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414114436.tgz', 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz', 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz', 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz', 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz', 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123343.tgz', 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-T1_20170414113634.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz', 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz']
+        anat_and_func_files = ['s3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414114436.tgz',
+                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz',
+                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz',
+                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz',
+                               # 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz',
+                               's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123343.tgz',
+                               's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-T1_20170414113634.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz'
+                               ]
 
         download_links = os.path.join(opts.work_dir,'alls3.txt')
         os.makedirs(Path(download_links).parent, exist_ok=True)
@@ -413,21 +424,21 @@ def get_workflow(logger):
             os.system('tar zxvf %s -C %s' % (download, bids_dir))
             print()
 
-        downloaded_func_files = glob.glob(os.path.join(download_dir,
-                                                       'sub-%s' % opts.participant_label[0].replace('_',''),
-                                                       opts.session,"func","*")
-                                          )
-        downloaded_anat_files = glob.glob(os.path.join(download_dir,
-                                                       'sub-%s' % opts.participant_label[0].replace('_',''),
-                                                       opts.session,"anat","*")
-                                          )
+        # downloaded_func_files = glob.glob(os.path.join(download_dir,
+        #                                                'sub-%s' % opts.participant_label[0].replace('_',''),
+        #                                                opts.session,"func","*")
+        #                                   )
+        # downloaded_anat_files = glob.glob(os.path.join(download_dir,
+        #                                                'sub-%s' % opts.participant_label[0].replace('_',''),
+        #                                                opts.session,"anat","*")
+        #                                   )
 
         # for file in downloaded_func_files:
         #     os.system('mv %s %s' % (file, func_dir))
         #
         # for file in downloaded_anat_files:
         #     os.system('mv %s %s' % (file, anat_dir))
-        opts.bids_dir = Path(bids_dir) #cant just do this need the layout object
+        opts.bids_dir = Path(bids_dir)
         opts.participant_label = ['sub-' + opts.participant_label[0].replace('_','')]
 
     # Validate inputs
