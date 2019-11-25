@@ -176,7 +176,7 @@ def init_base_wf(
 
         wf.connect([
             (inputnode, motionNode, [('bold_file', 'bold')]),
-            (motionNode, bold_confounds_wf), [('out', 'inputnode.movpar_file')]
+            (motionNode, bold_confounds_wf, [('out', 'inputnode.movpar_file')])
         ])
 
 
