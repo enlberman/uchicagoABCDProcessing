@@ -236,12 +236,12 @@ def init_base_wf(
             ])
 
             ## now connect parcellation output to hurst and connectivity
-            connectivityNode = pe.Node(FisherRToZMatrix(), name='connectivity_%s' % parcellation, iterables='csv', itersource=merge_deconfounded.name) #input is csv output is connectivity
+            connectivityNode = pe.Node(FisherRToZMatrix(), name='connectivity_%s' % parcellation, iterables=['csv'], itersource=merge_deconfounded.name) #input is csv output is connectivity
             wf.connect([
                 (transformNode, connectivityNode, [('transformed', 'csv')])
             ])
 
-            hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, iterables='csv', itersource=merge_deconfounded.name)
+            hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, iterables=['csv'], itersource=merge_deconfounded.name)
             wf.connect([
                 (transformNode, hurstNode, [('transformed', 'csv')])
             ])
