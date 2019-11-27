@@ -241,7 +241,7 @@ def init_base_wf(
                 (transformNode, connectivityNode, [('transformed', 'csv')])
             ])
 
-            hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, iterables=['csv'], itersource=merge_deconfounded.name)
+            hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, itersource=merge_deconfounded.name)
             wf.connect([
                 (transformNode, hurstNode, [('transformed', 'csv')])
             ])
