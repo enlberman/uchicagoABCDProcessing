@@ -36,7 +36,7 @@ def get_parser() -> ArgumentParser():
     from templateflow.api import templates
     from packaging.version import Version
     from ..__about__ import __version__
-    from fmriprep.workflows.bold.resampling import  NONSTANDARD_REFERENCES
+    # from fmriprep.workflows.bold.resampling import  NONSTANDARD_REFERENCES
     # from fmriprep.cli.version import check_latest, is_flagged
 
     verstr = 'fmriprep v{}'.format(__version__)
@@ -166,8 +166,8 @@ grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
 the spatial normalization.
 For further details, please check out \
-https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
-            ', '.join('"%s"' % s for s in templates()), ', '.join(NONSTANDARD_REFERENCES),
+""" % (
+            ', '.join('"%s"' % s for s in templates()),
             currentv.base_version if is_release else 'latest'))
 
     g_conf.add_argument(
