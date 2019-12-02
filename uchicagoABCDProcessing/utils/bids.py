@@ -13,9 +13,10 @@ from pathlib import Path
 
 from bids import BIDSLayout
 from nipype import logging
-from nipype.interfaces.base import TraitedSpec, OutputMultiObject, SimpleInterface
-from niworkflows.interfaces.bids import BIDSDataGrabberOutputSpec, BIDSDataGrabber, BIDSDataGrabberInputSpec, \
-    BIDSInfoInputSpec
+from nipype.interfaces.base import OutputMultiObject
+from niworkflows.interfaces.bids import _BIDSDataGrabberOutputSpec as BIDSDataGrabberOutputSpec
+from niworkflows.interfaces.bids import _BIDSDataGrabberInputSpec as BIDSDataGrabberInputSpec
+from niworkflows.interfaces.bids import BIDSDataGrabber
 
 LOGGER = logging.getLogger('nipype.interface')
 
