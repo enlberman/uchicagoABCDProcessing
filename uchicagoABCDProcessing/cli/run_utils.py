@@ -335,6 +335,7 @@ def get_workflow(logger):
     if __name__ == 'main':
         set_start_method('forkserver')
     warnings.showwarning = _warn_redirect
+    print(logger)
     opts = get_parser().parse_args()
 
     exec_env = os.name
