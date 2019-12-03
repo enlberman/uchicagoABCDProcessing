@@ -243,7 +243,8 @@ def init_base_wf(
 
             hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, itersource=merge_deconfounded.name)
             wf.connect([
-                (transformNode, hurstNode, [('transformed', 'csv')])
+                (transformNode, hurstNode, [('transformed', 'csv')]),
+                (merge_deconfounded, hurstNode, [('out', 'bold')])
             ])
 
     #finally setup the download workflow and connect it up
