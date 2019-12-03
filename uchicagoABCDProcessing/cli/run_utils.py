@@ -334,7 +334,7 @@ def get_workflow(logger):
     from .build_workflow import build_workflow
     if __name__ == 'main':
         set_start_method('forkserver')
-    warnings.showwarning = _warn_redirect
+    # warnings.showwarning = _warn_redirect
     print('****************************************')
     print()
     print()
