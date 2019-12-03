@@ -16,6 +16,10 @@ from uchicagoABCDProcessing.interfaces.oracle import OracleQuery
 
 from uchicagoABCDProcessing.cli.version import check_latest, is_flagged
 
+logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNING
+logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
+logger = logging.getLogger('cli')
+
 
 def _warn_redirect(message, category, filename, lineno, logger, file=None, line=None):
     logger.warning('Captured warning (%s): %s', category, message)
