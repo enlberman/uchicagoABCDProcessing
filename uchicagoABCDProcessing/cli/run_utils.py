@@ -427,7 +427,7 @@ def get_workflow(logger):
             print('untaring %s' % download)
             os.system('tar zxvf %s -C %s' % (download, bids_dir))
             print()
-        t1_files = glob.glob(os.path.join(download_dir,
+        t1_files = glob.glob(os.path.join(bids_dir,
                                                        'sub-%s' % opts.participant_label[0].replace('_',''),
                                                        opts.session,"anat","*T1w.nii")
                                           )
