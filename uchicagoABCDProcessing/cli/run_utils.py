@@ -335,15 +335,6 @@ def get_workflow(logger):
     if __name__ == 'main':
         set_start_method('forkserver')
     # warnings.showwarning = _warn_redirect
-    print('****************************************')
-    print()
-    print()
-    print()
-    print(logger)
-    print()
-    print()
-    print()
-    print('****************************************')
     opts = get_parser().parse_args()
 
     exec_env = os.name
@@ -391,16 +382,16 @@ def get_workflow(logger):
         #
         # anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
         anat_and_func_files = ['s3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414114436.tgz',
-                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz',
-                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz',
-                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz',
-                               # 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz',
+                               's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz',
+                               's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz',
+                               's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz',
+                               's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz',
                                's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123343.tgz',
                                's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-T1_20170414113634.tgz',
-                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz',
-                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz',
-                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz',
-                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz'
+                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz',
+                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz',
+                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz',
+                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz'
                                ]
 
         download_links = os.path.join(opts.work_dir,'alls3.txt')
@@ -436,7 +427,12 @@ def get_workflow(logger):
             print('untaring %s' % download)
             os.system('tar zxvf %s -C %s' % (download, bids_dir))
             print()
-
+        t1_files = glob.glob(os.path.join(download_dir,
+                                                       'sub-%s' % opts.participant_label[0].replace('_',''),
+                                                       opts.session,"anat","*T1w.nii")
+                                          )
+        for t1 in t1_files:
+            os.system('pydeface %s --outfile %s' % (t1, t1))
         # downloaded_func_files = glob.glob(os.path.join(download_dir,
         #                                                'sub-%s' % opts.participant_label[0].replace('_',''),
         #                                                opts.session,"func","*")
