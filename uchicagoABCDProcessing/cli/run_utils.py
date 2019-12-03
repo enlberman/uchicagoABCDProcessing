@@ -432,7 +432,7 @@ def get_workflow(logger):
                                                        opts.session,"anat","*T1w.nii")
                                           )
         for t1 in t1_files:
-            os.system('pydeface %s --outfile %s' % (t1, t1))
+            os.system('pydeface %s --outfile %s --force' % (t1, t1))
         # downloaded_func_files = glob.glob(os.path.join(download_dir,
         #                                                'sub-%s' % opts.participant_label[0].replace('_',''),
         #                                                opts.session,"func","*")
