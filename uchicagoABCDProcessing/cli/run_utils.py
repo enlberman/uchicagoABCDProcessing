@@ -448,8 +448,8 @@ def get_workflow(logger):
         #
         # for file in downloaded_anat_files:
         #     os.system('mv %s %s' % (file, anat_dir))
-        opts.bids_dir = Path(bids_dir)
-        opts.participant_label = ['sub-' + opts.participant_label[0].replace('_','')]
+    opts.bids_dir = Path(bids_dir)
+    opts.participant_label = ['sub-' + opts.participant_label[0].replace('_','')]
 
     # Validate inputs
     if not opts.skip_bids_validation:
