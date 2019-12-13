@@ -7,7 +7,6 @@ import gc
 import warnings
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
-from NDATools.Configuration import ClientConfiguration
 from uchicagoABCDProcessing.utils.bids import BIDSLayout
 
 import numpy
@@ -354,15 +353,17 @@ def get_workflow(logger):
         from ..utils.sentry import sentry_setup
         sentry_setup(opts, exec_env)
 
-    aws_token_info = os.popen(
-        "bash $NDA_TOKEN_GEN_DIR/curl/generate_token.sh '%s' '%s' 'https://nda.nih.gov/DataManager/dataManager'"
-        % (opts.nda_username, opts.nda_password)
-    ).readlines()
-    secret_key = aws_token_info[2].split(':')[1].strip()
-    access_key = aws_token_info[1].split(':')[1].strip()
-    session_token = aws_token_info[3].split(':')[1].strip()
+
 
     if not opts.skip_download:
+        from NDATools.Configuration import ClientConfiguration
+        aws_token_info = os.popen(
+            "bash $NDA_TOKEN_GEN_DIR/curl/generate_token.sh '%s' '%s' 'https://nda.nih.gov/DataManager/dataManager'"
+            % (opts.nda_username, opts.nda_password)
+        ).readlines()
+        secret_key = aws_token_info[2].split(':')[1].strip()
+        access_key = aws_token_info[1].split(':')[1].strip()
+        session_token = aws_token_info[3].split(':')[1].strip()
         # get_files = OracleQuery()
         # get_files.inputs.username = opts.miNDAR_username
         # get_files.inputs.password = opts.miNDAR_password
