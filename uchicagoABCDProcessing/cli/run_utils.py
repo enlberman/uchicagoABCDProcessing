@@ -353,7 +353,7 @@ def get_workflow(logger):
         from ..utils.sentry import sentry_setup
         sentry_setup(opts, exec_env)
 
-
+    bids_dir = os.path.join(opts.work_dir, 'bids')
 
     if not opts.skip_download:
         from NDATools.Configuration import ClientConfiguration
@@ -413,7 +413,7 @@ def get_workflow(logger):
         download_dir = os.path.join(opts.work_dir,'downloads')
         os.system("downloadcmd %s -t -d %s" % (download_links, download_dir)) # download all the files
 
-        bids_dir = os.path.join(opts.work_dir,'bids')
+
         subject_dir = os.path.join(bids_dir, 'sub-%s' % opts.participant_label[0].replace('_',''))
         session_dir = os.path.join(subject_dir, opts.session)
         func_dir = os.path.join(session_dir,'func')
