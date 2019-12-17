@@ -18,7 +18,7 @@ def init_regressed_datasink_wf(cold_output_dir: str, name='regressed_datasink_wf
 
     ds_regressed = pe.Node(DerivativesDataSink(
         base_directory=cold_output_dir, desc='clean', suffix='36p_despiked'),
-        name="ds_regressed_h", run_without_submitting=True,
+        name="ds_regressed", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
         (inputnode, ds_regressed, [('source_file', 'source_file'),
@@ -33,7 +33,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
     workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=[
-        'despiked', 'transformed', 'hurst', 'hurst_ci', 'hurst_r2', 'connectivity', 'bold']),
+        'despiked', 'transformed', 'hurst', 'hurst_ci', 'hurst_r2', 'connectivity']),
         name='inputnode')
 
     ds_atlas_transformed = pe.Node(DerivativesDataSink(
@@ -41,7 +41,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         name="ds_atlas", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, ds_atlas_transformed, [('bold', 'source_file'),
+        (inputnode, ds_atlas_transformed, [('despiked', 'source_file'),
                                    ('transformed', 'in_file'),
                                    ])
     ])

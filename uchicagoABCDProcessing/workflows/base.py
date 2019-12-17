@@ -258,8 +258,7 @@ def init_base_wf(
             derivates_output_wf = init_derivatives_datasink_wf(str(opts.output_dir), atlas=parcellation, name='output_%s_wf' % parcellation)
 
             wf.connect([
-                (inputnode, derivates_output_wf, [(('bold_file',_pop), 'inputnode.bold')]),
-                (despikeNode, derivates_output_wf, [(('out_file',_pop), 'inputnode.despiked')]),
+                (rg_workflow, derivates_output_wf, [(('ds_regressed.out_file',_pop), 'inputnode.despiked')]),
                 (transformNode, derivates_output_wf, [(('transformed', _pop2),'inputnode.transformed')]),
                 (hurstNode, derivates_output_wf, [(('hurst',_pop), 'inputnode.hurst')]),
                 (hurstNode, derivates_output_wf, [(('confidence_intervals',_pop), 'inputnode.hurst_ci')]),
