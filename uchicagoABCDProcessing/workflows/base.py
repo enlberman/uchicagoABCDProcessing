@@ -259,7 +259,7 @@ def init_base_wf(
 
             wf.connect([
                 (despikeNode, derivates_output_wf, [(('out_file',_pop), 'inputnode.despiked')]),
-                (transformNode, derivates_output_wf, [(('transformed', _pop),'inputnode.transformed')]),
+                (transformNode, derivates_output_wf, [(('transformed', _pop2),'inputnode.transformed')]),
                 (hurstNode, derivates_output_wf, [(('hurst',_pop), 'inputnode.hurst')]),
                 (hurstNode, derivates_output_wf, [(('confidence_intervals',_pop), 'inputnode.hurst_ci')]),
                 (hurstNode, derivates_output_wf, [(('rsquared',_pop), 'inputnode.hurst_r2')]),
@@ -278,6 +278,11 @@ def _prefix(subid):
 def _pop(inlist):
     if isinstance(inlist, (list, tuple)):
         return inlist[0]
+    return inlist
+
+def _pop2(inlist):
+    if isinstance(inlist, (list, tuple)):
+        return inlist[0][0]
     return inlist
 
 def _aslist(in_value):
