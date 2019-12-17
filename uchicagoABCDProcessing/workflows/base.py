@@ -11,7 +11,8 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
 
 from uchicagoABCDProcessing.interfaces import Motion
-from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB, init_regressed_datasink_wf
+from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB, init_regressed_datasink_wf, \
+    init_derivatives_datasink_wf
 
 
 def init_base_wf(
@@ -253,16 +254,16 @@ def init_base_wf(
                 (merge_deconfounded, hurstNode, [('out', 'bold')])
             ])
 
-            from .datasink import init_derivatives_datasink_wf
+
             derivates_output_wf = init_derivatives_datasink_wf(str(opts.output_dir), atlas=parcellation, name='output_%s_wf' % parcellation)
 
             wf.connect([
-                (despikeNode, derivates_output_wf, [('out_file', 'inputnode.despiked')]),
-                (transformNode, derivates_output_wf, [(('transformed', lambda x:x[0]),'inputnode.transformed')]),
-                (hurstNode, derivates_output_wf, [('hurst', 'inputnode.hurst')]),
-                (hurstNode, derivates_output_wf, [('confidence_intervals', 'inputnode.hurst_ci')]),
-                (hurstNode, derivates_output_wf, [('rsquared', 'inputnode.hurst_r2')]),
-                (connectivityNode, derivates_output_wf, [('connectivity', 'inputnode.connectivity')]),
+                (despikeNode, derivates_output_wf, [(('out_file',_pop), 'inputnode.despiked')]),
+                (transformNode, derivates_output_wf, [(('transformed', _pop),'inputnode.transformed')]),
+                (hurstNode, derivates_output_wf, [(('hurst',_pop), 'inputnode.hurst')]),
+                (hurstNode, derivates_output_wf, [(('confidence_intervals',_pop), 'inputnode.hurst_ci')]),
+                (hurstNode, derivates_output_wf, [(('rsquared',_pop), 'inputnode.hurst_r2')]),
+                (connectivityNode, derivates_output_wf, [(('connectivity',_pop), 'inputnode.connectivity')]),
             ])
 
     return fmriprep_workflow
