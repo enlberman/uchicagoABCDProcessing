@@ -71,7 +71,9 @@ def get_parser() -> ArgumentParser():
                         help='craddock parcellation similarity_measure', )
     parser.add_argument('--algorithm', action='store', default='2level', choices=['2level', 'mean', None],
                         help='craddock parcellation algorithm', )
-
+    parser.add_argument('--cold_output_dir', action='store', type=Path,
+                        help='the output path for the outcomes of preprocessing and visual '
+                             'reports')
     parser.add_argument('--miNDAR_host', action='store', type=str,
                         help='miDNAR host')
     parser.add_argument('--miNDAR_password', action='store', type=str,
@@ -383,16 +385,16 @@ def get_workflow(logger):
         #
         # anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
         anat_and_func_files = ['s3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414114436.tgz',
-                               's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz',
-                               's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz',
-                               's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz',
-                               's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz',
-                               's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123343.tgz',
+                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz',
+                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz',
+                               # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414113822.tgz',
+                               # 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123932.tgz',
+                               # 's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-MID-fMRI_20170414123343.tgz',
                                's3://NDAR_Central_2/submission_19137/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-T1_20170414113634.tgz',
-                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz',
-                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz',
-                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz',
-                               's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz'
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414125453.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122216.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-SST-fMRI_20170414124837.tgz',
+                               # 's3://NDAR_Central_3/submission_19178/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-nBack-fMRI_20170414122744.tgz'
                                ]
 
         download_links = os.path.join(opts.work_dir,'alls3.txt')

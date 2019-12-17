@@ -11,7 +11,7 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
 
 from uchicagoABCDProcessing.interfaces import Motion
-from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB
+from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB, init_regressed_datasink_wf
 
 
 def init_base_wf(
@@ -213,8 +213,14 @@ def init_base_wf(
                                        run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         wf.connect([
-            (confoundRegressionNode, merge_deconfounded, [('regressed', 'in1')]),
+            # (confoundRegressionNode, merge_deconfounded, [('regressed', 'in1')]),
             (despikeNode, merge_deconfounded, [('out_file', 'in2')])
+        ])
+
+        rg_workflow = init_regressed_datasink_wf(str(opts.cold_output_dir))
+        wf.connect([
+            (despikeNode, rg_workflow,[('out_file', 'inputnode.despiked')]),
+            (bold_std_trans_wf, rg_workflow, [('outputnode.bold_std', 'inputnode.source_file')]),
         ])
 
         # do each parcellation and final processing seperately
@@ -247,16 +253,18 @@ def init_base_wf(
                 (merge_deconfounded, hurstNode, [('out', 'bold')])
             ])
 
-    #finally setup the download workflow and connect it up
-    # bids_src = fmriprep_workflow.get_node(workflow_base_name + '.' + 'bidssrc')
-    """
-    need to connect
-    bids_src.inpus.subject_data:
-    bids_info = pe.Node(BIDSInfo(
-        bids_dir=layout.root, bids_validate=False), name='bids_info')
-        anat derivatives workflow raw_sources.inputs.bids_root = bids_root
-    """
-    print()
+            from .datasink import init_derivatives_datasink_wf
+            derivates_output_wf = init_derivatives_datasink_wf(str(opts.output_dir), atlas=parcellation)
+
+            wf.connect([
+                (despikeNode, derivates_output_wf, [('out_file', 'inputnode.despiked')]),
+                (transformNode, derivates_output_wf, [('transformed', 'inputnode.transformed')]),
+                (hurstNode, derivates_output_wf, [('hurst', 'inputnode.hurst')]),
+                (hurstNode, derivates_output_wf, [('confidence_intervals', 'inputnode.hurst_ci')]),
+                (hurstNode, derivates_output_wf, [('rsquared', 'inputnode.hurst_r2')]),
+                (connectivityNode, derivates_output_wf, [('connectivity', 'inputnode.connectivity')]),
+            ])
+
     return fmriprep_workflow
 
 

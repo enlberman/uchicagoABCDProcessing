@@ -9,45 +9,77 @@ from ..interfaces import DerivativesDataSink
 DEFAULT_MEMORY_MIN_GB=0.01
 
 
-def init_datasink_wf(bids_root: str, output_dir: str, name='datasink_wf'):
+def init_regressed_datasink_wf(cold_output_dir: str, name='regressed_datasink_wf'):
     workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=[
-        'dfa_h', 'dfa_ci', 'dfa_rsquared', 'source_file']),
+        'despiked', 'source_file']),
         name='inputnode')
 
-    raw_sources = pe.Node(niu.Function(function=_bids_relative), name='raw_sources')
-    raw_sources.inputs.bids_root = bids_root
+    ds_regressed = pe.Node(DerivativesDataSink(
+        base_directory=cold_output_dir, desc='clean', suffix='36p_despiked'),
+        name="ds_regressed_h", run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+    workflow.connect([
+        (inputnode, ds_regressed, [('source_file', 'source_file'),
+                                   ('despiked', 'in_file'),
+                                   ])
+    ])
 
-    ds_dfa_h = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, desc='dfa', suffix='hurst'),
+    return workflow
+
+
+def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink_wf'):
+    workflow = Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=[
+        'despiked', 'transformed', 'hurst', 'hurst_ci', 'hurst_r2', 'connectivity']),
+        name='inputnode')
+
+    ds_atlas_transformed = pe.Node(DerivativesDataSink(
+        base_directory=hot_output_dir, desc='ts', suffix=atlas),
         name="ds_dfa_h", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, raw_sources, [('source_file', 'in_files')]),
-        (inputnode, ds_dfa_h, [('source_file', 'source_file'),
-                                   ('dfa_h', 'in_file'),
-                               ])
+        (inputnode, ds_atlas_transformed, [('despiked', 'source_file'),
+                                   ('transformed', 'in_file'),
+                                   ])
     ])
 
-    ds_dfa_ci = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, desc='dfa', suffix='ci'),
-        name="ds_dfa_ci", run_without_submitting=True,
+    ds_hurst = pe.Node(DerivativesDataSink(
+        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst"),
+        name="ds_dfa_h", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, ds_dfa_ci, [('source_file', 'source_file'),
-                               ('dfa_ci', 'in_file'),
-                               ]),
+        (ds_atlas_transformed, ds_hurst, [('out_file', 'source_file')]),
+       (inputnode, ds_hurst,[('hurst', 'in_file')]),
     ])
 
-    ds_dfa_r2 = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, desc='dfa', suffix='rsquared'),
-        name="ds_dfa_rsquared", run_without_submitting=True,
+    ds_hurst_ci = pe.Node(DerivativesDataSink(
+        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst_confidence_interval"),
+        name="ds_dfa_hci", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, ds_dfa_r2, [('source_file', 'source_file'),
-                                ('dfa_rsquared', 'in_file'),
-                                ]),
+        (ds_atlas_transformed, ds_hurst_ci, [('out_file', 'source_file')]),
+        (inputnode, ds_hurst_ci, [('hurst_r2', 'in_file')]),
+
     ])
 
+    ds_hurst_r2 = pe.Node(DerivativesDataSink(
+        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst_rsquared"),
+        name="ds_dfa_hr2", run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+    workflow.connect([
+        (ds_atlas_transformed, ds_hurst_r2, [('out_file', 'source_file')]),
+        (inputnode, ds_hurst_r2,[('hurst_r2', 'in_file')]),
+    ])
+
+    ds_connectivity = pe.Node(DerivativesDataSink(
+        base_directory=hot_output_dir, desc='atlas', suffix="connectivity"),
+        name="ds_connectivity", run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+    workflow.connect([
+        (ds_atlas_transformed, ds_connectivity, [('out_file', 'source_file')]),
+        (inputnode, ds_connectivity, [('connectivity', 'in_file')]),
+    ])
     return workflow
