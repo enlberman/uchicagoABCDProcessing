@@ -221,7 +221,7 @@ def init_base_wf(
         rg_workflow = init_regressed_datasink_wf(str(opts.cold_output_dir))
         wf.connect([
             (despikeNode, rg_workflow,[('out_file', 'inputnode.despiked')]),
-            (bold_std_trans_wf, rg_workflow, [(('outputnode.bold_std',_pop), 'inputnode.source_file')]),
+            (inputnode, rg_workflow, [(('bold_file',_pop), 'inputnode.source_file')]),
         ])
 
         # do each parcellation and final processing seperately
@@ -258,6 +258,7 @@ def init_base_wf(
             derivates_output_wf = init_derivatives_datasink_wf(str(opts.output_dir), atlas=parcellation, name='output_%s_wf' % parcellation)
 
             wf.connect([
+                (inputnode, derivates_output_wf, [(('bold_file',_pop), 'inputnode.bold')]),
                 (despikeNode, derivates_output_wf, [(('out_file',_pop), 'inputnode.despiked')]),
                 (transformNode, derivates_output_wf, [(('transformed', _pop2),'inputnode.transformed')]),
                 (hurstNode, derivates_output_wf, [(('hurst',_pop), 'inputnode.hurst')]),
@@ -267,7 +268,6 @@ def init_base_wf(
             ])
 
     return fmriprep_workflow
-
 
 def _prefix(subid):
     if subid.startswith('sub-'):

@@ -33,7 +33,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
     workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=[
-        'despiked', 'transformed', 'hurst', 'hurst_ci', 'hurst_r2', 'connectivity']),
+        'despiked', 'transformed', 'hurst', 'hurst_ci', 'hurst_r2', 'connectivity', 'bold']),
         name='inputnode')
 
     ds_atlas_transformed = pe.Node(DerivativesDataSink(
@@ -41,7 +41,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         name="ds_atlas", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, ds_atlas_transformed, [('despiked', 'source_file'),
+        (inputnode, ds_atlas_transformed, [('bold', 'source_file'),
                                    ('transformed', 'in_file'),
                                    ])
     ])
