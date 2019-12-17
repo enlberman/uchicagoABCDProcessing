@@ -37,7 +37,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         name='inputnode')
 
     ds_atlas_transformed = pe.Node(DerivativesDataSink(
-        base_directory=hot_output_dir, desc='ts', suffix=atlas),
+        base_directory=hot_output_dir, desc='ts', suffix=atlas,keep_dtype=True),
         name="ds_atlas", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -47,7 +47,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
     ])
 
     ds_hurst = pe.Node(DerivativesDataSink(
-        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst"),
+        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst",keep_dtype=True),
         name="ds_hurst", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -56,7 +56,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
     ])
 
     ds_hurst_ci = pe.Node(DerivativesDataSink(
-        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst_confidence_interval"),
+        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst_confidence_interval",keep_dtype=True),
         name="ds_hurst_ci", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -66,7 +66,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
     ])
 
     ds_hurst_r2 = pe.Node(DerivativesDataSink(
-        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst_rsquared"),
+        base_directory=hot_output_dir, desc='atlas_dfa', suffix="hurst_rsquared",keep_dtype=True),
         name="ds_hurst_r2", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -75,7 +75,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
     ])
 
     ds_connectivity = pe.Node(DerivativesDataSink(
-        base_directory=hot_output_dir, desc='atlas', suffix="connectivity"),
+        base_directory=hot_output_dir, desc='atlas', suffix="connectivity",keep_dtype=True),
         name="ds_connectivity", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
