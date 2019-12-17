@@ -254,7 +254,7 @@ def init_base_wf(
             ])
 
             from .datasink import init_derivatives_datasink_wf
-            derivates_output_wf = init_derivatives_datasink_wf(str(opts.output_dir), atlas=parcellation)
+            derivates_output_wf = init_derivatives_datasink_wf(str(opts.output_dir), atlas=parcellation, name='output_%s_wf' % parcellation)
 
             wf.connect([
                 (despikeNode, derivates_output_wf, [('out_file', 'inputnode.despiked')]),
