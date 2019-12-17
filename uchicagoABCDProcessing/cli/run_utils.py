@@ -365,25 +365,25 @@ def get_workflow(logger):
         ).readlines()
         secret_key = aws_token_info[2].split(':')[1].strip()
         access_key = aws_token_info[1].split(':')[1].strip()
-        session_token = aws_token_info[3].split(':')[1].strip()
-        # get_files = OracleQuery()
-        # get_files.inputs.username = opts.miNDAR_username
-        # get_files.inputs.password = opts.miNDAR_password
-        # get_files.inputs.host = opts.miNDAR_host
-        # get_files.inputs.service = 'ORCL'
-        # get_files.inputs.write_to_file=False
-        #
-        # get_files.inputs.query = "select column_name from USER_TAB_COLUMNS where table_name = 'FMRIRESULTS01'"
-        # get_files.run()
-        # columns = get_files._results['out'].values.flatten()
-        # scan_type = numpy.argwhere(columns == 'SCAN_TYPE').flatten()[0]
-        # file_link = numpy.argwhere(columns == 'DERIVED_FILES').flatten()[0]
-        #
-        # get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label[0]
-        # get_files.run()
-        # subject_files = get_files._results['out']
-        #
-        # anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
+        # session_token = aws_token_info[3].split(':')[1].strip()
+        get_files = OracleQuery()
+        get_files.inputs.username = opts.miNDAR_username
+        get_files.inputs.password = opts.miNDAR_password
+        get_files.inputs.host = opts.miNDAR_host
+        get_files.inputs.service = 'ORCL'
+        get_files.inputs.write_to_file=False
+
+        get_files.inputs.query = "select column_name from USER_TAB_COLUMNS where table_name = 'FMRIRESULTS01'"
+        get_files.run()
+        columns = get_files._results['out'].values.flatten()
+        scan_type = numpy.argwhere(columns == 'SCAN_TYPE').flatten()[0]
+        file_link = numpy.argwhere(columns == 'DERIVED_FILES').flatten()[0]
+
+        get_files.inputs.query = "select * from FMRIRESULTS01 where SUBJECTKEY = '%s'" % opts.participant_label[0]
+        get_files.run()
+        subject_files = get_files._results['out']
+
+        anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
         anat_and_func_files = ['s3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414114436.tgz',
                                # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414120922.tgz',
                                # 's3://NDAR_Central_2/submission_19161/NDARINVRCE62M22_baselineYear1Arm1_ABCD-MPROC-rsfMRI_20170414121456.tgz',

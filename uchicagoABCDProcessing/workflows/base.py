@@ -258,7 +258,7 @@ def init_base_wf(
 
             wf.connect([
                 (despikeNode, derivates_output_wf, [('out_file', 'inputnode.despiked')]),
-                (transformNode, derivates_output_wf, [('transformed', 'inputnode.transformed')]),
+                (transformNode, derivates_output_wf, [(('transformed', lambda x:x[0]),'inputnode.transformed')]),
                 (hurstNode, derivates_output_wf, [('hurst', 'inputnode.hurst')]),
                 (hurstNode, derivates_output_wf, [('confidence_intervals', 'inputnode.hurst_ci')]),
                 (hurstNode, derivates_output_wf, [('rsquared', 'inputnode.hurst_r2')]),
