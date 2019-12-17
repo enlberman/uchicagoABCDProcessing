@@ -71,7 +71,7 @@ def init_base_wf(
         low_mem=low_mem,
         medial_surface_nan=medial_surface_nan,
         omp_nthreads=omp_nthreads,
-        output_dir=str(output_dir),
+        output_dir=str(opts.cold_output_dir),
         output_spaces=output_spaces,
         run_uuid=run_uuid,
         regressors_all_comps=regressors_all_comps,
