@@ -221,7 +221,7 @@ def init_base_wf(
         rg_workflow = init_regressed_datasink_wf(str(opts.cold_output_dir))
         wf.connect([
             (despikeNode, rg_workflow,[('out_file', 'inputnode.despiked')]),
-            (bold_std_trans_wf, rg_workflow, [('outputnode.bold_std', 'inputnode.source_file')]),
+            (bold_std_trans_wf, rg_workflow, [(('outputnode.bold_std',_pop), 'inputnode.source_file')]),
         ])
 
         # do each parcellation and final processing seperately

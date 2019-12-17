@@ -41,8 +41,8 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         name="ds_atlas", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, ds_atlas_transformed, [('despiked', 'source_file'),
-                                   ('transformed', 'in_file'),
+        (inputnode, ds_atlas_transformed, [(('despiked',_pop), 'source_file'),
+                                   (('transformed',_pop), 'in_file'),
                                    ])
     ])
 
@@ -52,7 +52,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
         (ds_atlas_transformed, ds_hurst, [('out_file', 'source_file')]),
-       (inputnode, ds_hurst,[('hurst', 'in_file')]),
+       (inputnode, ds_hurst,[(('hurst',_pop), 'in_file')]),
     ])
 
     ds_hurst_ci = pe.Node(DerivativesDataSink(
@@ -61,7 +61,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
         (ds_atlas_transformed, ds_hurst_ci, [('out_file', 'source_file')]),
-        (inputnode, ds_hurst_ci, [('hurst_r2', 'in_file')]),
+        (inputnode, ds_hurst_ci, [(('hurst_r2',_pop), 'in_file')]),
 
     ])
 
@@ -71,7 +71,7 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
         (ds_atlas_transformed, ds_hurst_r2, [('out_file', 'source_file')]),
-        (inputnode, ds_hurst_r2,[('hurst_r2', 'in_file')]),
+        (inputnode, ds_hurst_r2,[(('hurst_r2',_pop), 'in_file')]),
     ])
 
     ds_connectivity = pe.Node(DerivativesDataSink(
@@ -80,6 +80,12 @@ def init_derivatives_datasink_wf(hot_output_dir: str, atlas: str, name='datasink
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
         (ds_atlas_transformed, ds_connectivity, [('out_file', 'source_file')]),
-        (inputnode, ds_connectivity, [('connectivity', 'in_file')]),
+        (inputnode, ds_connectivity, [(('connectivity',_pop), 'in_file')]),
     ])
     return workflow
+
+
+def _pop(inlist):
+    if isinstance(inlist, (list, tuple)):
+        return inlist[0]
+    return inlist
