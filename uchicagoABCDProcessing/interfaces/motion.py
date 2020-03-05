@@ -33,6 +33,7 @@ class Motion(SimpleInterface):
         original_motion_file = self.inputs.bold.replace('_bold.nii', '_motion.tsv')
         motion_params = pandas.read_csv(original_motion_file,delimiter='\t')
         reordered_params = motion_params[['trans_x', 'trans_y', 'trans_z', 'rot_x', 'rot_y', 'rot_z']].values
+        reordered_params[:, 3:] *= numpy.pi / 180
         output_file = os.path.join(os.getcwd(),'motion_params.txt')
         numpy.savetxt(output_file, reordered_params, delimiter=' ')
 

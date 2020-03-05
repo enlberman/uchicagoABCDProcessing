@@ -105,7 +105,7 @@ for participant in participants:
         subject_files = get_files._results['out']
 
         anat_and_func_files =subject_files[(subject_files[scan_type] =='MR structural (T1)') | (subject_files[scan_type] =='fMRI')][file_link].values
-        new_paths = numpy.unique([str(Path(x).parent) for x in anat_and_func_files])
+        new_paths = numpy.unique([str(Path(x)) for x in anat_and_func_files])
         paths.append(new_paths)
         temp = numpy.unique(numpy.hstack(paths))
         paths=[]
@@ -114,5 +114,5 @@ for participant in participants:
     except:
         pass
     if i % 100 == 0:
-        numpy.savetxt('/home/andrewstier/Downloads/subject_buckets.txt', paths[0],fmt='%s')
-numpy.savetxt('/home/andrewstier/Downloads/subject_buckets.txt', paths[0],fmt='%s')
+        numpy.savetxt('/home/andrewstier/Downloads/subject_files.txt', paths[0],fmt='%s')
+numpy.savetxt('/home/andrewstier/Downloads/subject_files.txt', paths[0],fmt='%s')
