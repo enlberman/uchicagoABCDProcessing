@@ -175,9 +175,13 @@ def init_base_wf(
             (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')]),
             (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
             (bold_sdc_wf, bold_std_trans_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')]),
-            (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')])
         ])
+
+        if carpetplot_wf is not None:
+            wf.connect([
+                (inputnode, carpetplot_wf, [('bold_file', 'inputnode.bold')]),
+                (bold_sdc_wf, carpetplot_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            ])
 
         motionNode = pe.Node(Motion(),name='motion_file', run_without_submitting=True,mem_gb=DEFAULT_MEMORY_MIN_GB)
 
