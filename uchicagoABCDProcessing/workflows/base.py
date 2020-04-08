@@ -158,7 +158,7 @@ def init_base_wf(
             workflow_base_name + '.' + unique_workflow + '.' + 'sdc_bypass_wf')
         carpetplot_wf = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'carpetplot_wf')
-        print(fmriprep_workflow.list_node_names())
+        print(wf.list_node_names())
         inputnode = fmriprep_workflow.get_node(
             workflow_base_name + '.' + unique_workflow + '.' + 'inputnode')
 
