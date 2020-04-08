@@ -165,6 +165,11 @@ def init_base_wf(
         wf.remove_nodes([bold_bold_trans_wf])
 
         # rewire the workflow after removing the bold bold trans and hmc workflows
+        print(inputnode.name)
+        print(bold_sdc_wf.name)
+        print(bold_confounds_wf.name)
+        print(bold_std_trans_wf.name)
+        print(carpetplot_wf.name)
         wf.connect([
             (inputnode, bold_confounds_wf, [('bold_file', 'inputnode.bold')]),
             (bold_sdc_wf, bold_confounds_wf, [('outputnode.bold_mask', 'inputnode.bold_mask')]),
