@@ -11,6 +11,7 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
 
 from uchicagoABCDProcessing.interfaces import Motion
+from uchicagoABCDProcessing.interfaces.trim_time_series import Trim
 from uchicagoABCDProcessing.workflows.datasink import DEFAULT_MEMORY_MIN_GB, init_regressed_datasink_wf, \
     init_derivatives_datasink_wf
 
@@ -247,15 +248,21 @@ def init_base_wf(
                 (merge_deconfounded, transformNode,[('out', 'nifti')])
             ])
 
+            # now trim the parcelated time series
+            trimNode = pe.Node(Trim(), name='trim_%s' % parcellation)
+            wf.connect([
+                (transformNode, trimNode, [('transformed', 'ts')])
+            ])
+
             ## now connect parcellation output to hurst and connectivity
             connectivityNode = pe.Node(FisherRToZMatrix(), name='connectivity_%s' % parcellation, itersource=merge_deconfounded.name) #input is csv output is connectivity
             wf.connect([
-                (transformNode, connectivityNode, [('transformed', 'csv')])
+                (trimNode, connectivityNode, [('trimmed', 'csv')])
             ])
 
             hurstNode = pe.Node(DFA(), name='dfa_%s' % parcellation, itersource=merge_deconfounded.name)
             wf.connect([
-                (transformNode, hurstNode, [('transformed', 'csv')]),
+                (trimNode, hurstNode, [('trimmed', 'csv')]),
                 (merge_deconfounded, hurstNode, [('out', 'bold')])
             ])
 
@@ -264,7 +271,7 @@ def init_base_wf(
 
             wf.connect([
                 (rg_workflow, derivates_output_wf, [(('ds_regressed.out_file',_pop), 'inputnode.despiked')]),
-                (transformNode, derivates_output_wf, [(('transformed', _pop2),'inputnode.transformed')]),
+                (trimNode, derivates_output_wf, [(('transformed', _pop2),'inputnode.transformed')]),
                 (hurstNode, derivates_output_wf, [(('hurst',_pop), 'inputnode.hurst')]),
                 (hurstNode, derivates_output_wf, [(('confidence_intervals',_pop), 'inputnode.hurst_ci')]),
                 (hurstNode, derivates_output_wf, [(('rsquared',_pop), 'inputnode.hurst_r2')]),
